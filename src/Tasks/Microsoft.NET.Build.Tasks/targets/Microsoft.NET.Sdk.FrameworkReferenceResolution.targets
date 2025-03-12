@@ -18,9 +18,9 @@ Copyright (c) .NET Foundation. All rights reserved.
   </PropertyGroup>
 
   <UsingTask TaskName="CreateWindowsSdkKnownFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="CheckForDuplicateFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="ProcessFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="ResolveAppHosts" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="CheckForDuplicateFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="ProcessFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="ResolveAppHosts" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
 
   <Target Name="AddWindowsSdkKnownFrameworkReferences"
           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' And '$(TargetPlatformIdentifier)' == 'Windows'">
@@ -231,6 +231,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   </Target>
 
   <UsingTask TaskName="ResolveFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="ResolveFrameworkReferences" TaskMode="Static" />
 
   <!--
     ============================================================
@@ -388,6 +389,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <UsingTask TaskName="GetPackageDirectory" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
   <UsingTask TaskName="ResolveTargetingPackAssets" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="GetPackageDirectory" TaskMode="Static" />
+  <UsingTaskPrecomputationMode TaskName="ResolveTargetingPackAssets" TaskMode="Static" />
 
   <!--
     ============================================================
