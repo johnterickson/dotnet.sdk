@@ -169,7 +169,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     assembly attribute values and msbuild will then execute CoreGenerateAssembly to generate a new file.
   -->
   <Target Name="CreateGeneratedAssemblyInfoInputsCacheFile"
-          DependsOnTargets="GetAssemblyAttributes">
+          DependsOnTargets="GetAssemblyAttributes"
+          PrecomputationMode="Skip">
     <PropertyGroup>
       <GeneratedAssemblyInfoInputsCacheFile>$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfoInputs.cache</GeneratedAssemblyInfoInputsCacheFile>
     </PropertyGroup>

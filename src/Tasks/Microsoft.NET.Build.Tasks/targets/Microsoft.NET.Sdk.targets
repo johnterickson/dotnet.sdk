@@ -24,10 +24,10 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Import Project="Microsoft.NET.Sdk.FrameworkReferenceResolution.targets" />
 
-  <UsingTask TaskName="GenerateDepsFile" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="GenerateRuntimeConfigurationFiles" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="GetAssemblyVersion" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="GenerateSatelliteAssemblies" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="GenerateDepsFile" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="GenerateRuntimeConfigurationFiles" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="GetAssemblyVersion" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="GenerateSatelliteAssemblies" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
 
   <PropertyGroup>
     <DisableStandardFrameworkResolution Condition="'$(DisableStandardFrameworkResolution)' == ''">$(_IsNETCoreOrNETStandard)</DisableStandardFrameworkResolution>
@@ -238,9 +238,9 @@ Copyright (c) .NET Foundation. All rights reserved.
   <!-- NOTE: Keep in sync with https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.tasks -->
   <!-- `Condition="Exists('$(RoslynTargetsPath)')` is needed because the package might not be yet downloaded during restore in VS
         and we do not want to fail the restore phase because of that. -->
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" />
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" />
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
 
   <ItemGroup Condition="'$(_NeedToDownloadMicrosoftNetSdkCompilersToolsetPackage)' == 'true'">
     <PackageDownload Include="Microsoft.Net.Sdk.Compilers.Toolset" Version="[$(NETCoreSdkVersion)]" />
@@ -285,6 +285,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
 
   <Target Name="GenerateBuildDependencyFile"
+          PrecomputeMerge="GenerateOutDir"
           DependsOnTargets="_DefaultMicrosoftNETPlatformLibrary;
                             _HandlePackageFileConflicts;
                             _ComputeReferenceAssemblies;
@@ -294,6 +295,8 @@ Copyright (c) .NET Foundation. All rights reserved.
           BeforeTargets="CopyFilesToOutputDirectory"
           Condition="'$(GenerateDependencyFile)' == 'true'"
           Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects)"
+          PrecomputeInputs="@(ResolvedCompileFileDefinitions);@(ReferencePathPrecomputeInputs)"
+          Deferred="Item:UserRuntimeAssembly;Item:ReferencePath;Item:ReferenceDependencyPaths"
           Outputs="$(ProjectDepsFilePath)">
 
     <!-- Set a dummy Version if it hasn't been set by DefaultAssemblyInfo.targets -->
@@ -346,8 +349,9 @@ Copyright (c) .NET Foundation. All rights reserved.
                       IncludeRuntimeFileVersions="$(IncludeFileVersionsInDependencyFile)"
                       RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"
                       IncludeProjectsNotInAssetsFile="$(IncludeProjectsNotInAssetsFileInDepsFile)"
-                      ValidRuntimeIdentifierPlatformsForAssets="@(_ValidRuntimeIdentifierPlatformsForAssets)"/>
-    <ItemGroup>
+                      ValidRuntimeIdentifierPlatformsForAssets="@(_ValidRuntimeIdentifierPlatformsForAssets)"
+                      PrecomputeInputs="@(NativeCopyLocalItems);@(ResourceCopyLocalItems);@(RuntimeCopyLocalItems);@(RuntimeTargetsCopyLocalItems)"/>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <!-- Do this in an ItemGroup instead of as an output parameter of the GenerateDepsFile task so that it still gets added to the item set
            during incremental builds when the task is skipped -->
       <FileWrites Include="$(ProjectDepsFilePath)" Condition="Exists('$(ProjectDepsFilePath)')"/>
@@ -356,7 +360,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <!-- To achieve incremental build with property change. When any property changes, WriteOnlyWhenDifferent will be triggered to write cache file.
   And the cache file's timestamp will be later, and it then triggers the incremental build.-->
-  <Target Name="_GenerateRuntimeConfigurationFilesInputCache" DependsOnTargets="_DefaultMicrosoftNETPlatformLibrary">
+  <Target Name="_GenerateRuntimeConfigurationFilesInputCache" DependsOnTargets="_DefaultMicrosoftNETPlatformLibrary" PrecomputationMode="Skip">
     <ItemGroup>
       <GenerateRuntimeConfigurationFilesInputs Include="$(_GenerateRuntimeConfigurationPropertyInputsCache)" />
 
@@ -394,6 +398,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
 
   <Target Name="GenerateBuildRuntimeConfigurationFiles"
+          PrecomputeMerge="GenerateOutDir"
           DependsOnTargets="_GenerateRuntimeConfigurationFilesInputCache"
           BeforeTargets="CopyFilesToOutputDirectory"
           Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true'"
@@ -434,7 +439,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     </GenerateRuntimeConfigurationFiles>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <!-- Do this in an ItemGroup instead of as an output parameter of the GenerateDepsFile task so that it still gets added to the item set
           during incremental builds when the task is skipped -->
       <FileWrites Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')"/>
@@ -829,9 +834,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           Outputs="$(AppHostIntermediatePath)"
           DependsOnTargets="_GetAppHostPaths;_GetAppHostCreationConfiguration;CoreCompile"
           Condition="'$(ComputeNETCoreBuildOutputFiles)' == 'true' and
-                     '$(AppHostSourcePath)' != '' and
-                     Exists('@(IntermediateAssembly)') and
-                     Exists('$(AppHostSourcePath)')">
+                     '$(AppHostSourcePath)' != ''">
     <CreateAppHost AppHostSourcePath="$(AppHostSourcePath)"
                    AppHostDestinationPath="$(AppHostIntermediatePath)"
                    AppBinaryName="$(AssemblyName)$(TargetExt)"
@@ -1056,9 +1059,12 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_ComputeReferenceAssemblies"
-          DependsOnTargets="ResolveAssemblyReferences">
+          DependsOnTargets="ResolveReferences"
+          PrecomputeMerge="ResolveReferences"
+          Deferred="Item:ReferencePath;Item:_FrameworkReferenceAssemblies;Item:_ReferenceOnlyAssemblies"
+          >
 
-    <ItemGroup>
+    <ItemGroup PrecomputationMode="Deferred">
       <_FrameworkReferenceAssemblies Include="@(ReferencePath)"
                                      Condition="(%(ReferencePath.FrameworkFile) == 'true' or
                                                 %(ReferencePath.ResolvedFrom) == 'ImplicitlyExpandDesignTimeFacades')
@@ -1091,8 +1097,11 @@ Copyright (c) .NET Foundation. All rights reserved.
            These will be project references and direct references and their copy local dependencies.
     ============================================================
     -->
-  <Target Name="_ComputeUserRuntimeAssemblies">
-    <ItemGroup>
+  <Target Name="_ComputeUserRuntimeAssemblies" 
+    DependsOnTargets="ResolveReferences"
+    PrecomputeMerge="ResolveReferences"
+    Deferred="Item:ReferencePath;Item:ReferenceDependencyPaths;Item:UserRuntimeAssembly">
+    <ItemGroup PrecomputationMode="Deferred">
       <!-- IncludeRuntimeDependency=true metadata is escape hatch to include a non-copy local reference in deps file as a runtime dependency -->
       <ReferencePath>
         <IncludeRuntimeDependency Condition="'%(ReferencePath.IncludeRuntimeDependency)' == '' and '%(ReferencePath.CopyLocal)' == 'true'">true</IncludeRuntimeDependency>
@@ -1279,10 +1288,13 @@ Copyright (c) .NET Foundation. All rights reserved.
   -->
 
   <UsingTask TaskName="CheckForUnsupportedWinMDReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="CheckForUnsupportedWinMDReferences" TaskMode="Dynamic" />
 
   <Target Name="_BlockWinMDsOnUnsupportedTFMs"
           AfterTargets="PreBuildEvent"
           DependsOnTargets="ResolveReferences"
+          Deferred="Item:ReferencePath"
+          PrecomputationMode="Skip"
           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '5.0'))">
 
     <CheckForUnsupportedWinMDReferences
@@ -1367,6 +1379,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
 
   <UsingTask TaskName="ValidateExecutableReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="ValidateExecutableReferences" TaskMode="Static" />
 
   <PropertyGroup>
     <_UseAttributeForTargetFrameworkInfoPropertyNames Condition="$([MSBuild]::VersionGreaterThanOrEquals($(MSBuildVersion), '17.0'))">true</_UseAttributeForTargetFrameworkInfoPropertyNames>

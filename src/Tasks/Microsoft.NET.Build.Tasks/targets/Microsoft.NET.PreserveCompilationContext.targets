@@ -80,11 +80,15 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_CopyReferenceOnlyAssembliesForBuild"
+          PrecomputeMerge="GenerateOutDir"
           Condition="'$(PreserveCompilationReferences)' == 'true'"
           DependsOnTargets="_ComputeReferenceAssemblies"
           AfterTargets="CopyFilesToOutputDirectory">
 
-    <Copy SourceFiles="@(_ReferenceOnlyAssemblies)"
+    <Copy
+      Regraph="1"
+      NoPredict="true"
+      SourceFiles="@(_ReferenceOnlyAssemblies)"
           DestinationFolder="$(OutDir)$(RefAssembliesFolderName)"
           SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
           OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"

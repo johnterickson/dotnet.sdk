@@ -18,10 +18,10 @@ Copyright (c) .NET Foundation. All rights reserved.
   </PropertyGroup>
 
   <UsingTask TaskName="CreateWindowsSdkKnownFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="GetPackagesToPrune" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="CheckForDuplicateFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="ProcessFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="ResolveAppHosts" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="GetPackagesToPrune" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="CheckForDuplicateFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="ProcessFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="ResolveAppHosts" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
 
 
   <!-- Don't add Windows SDK framework reference for C++ by default, as C++ doesn't use it and it would be an unnecessary download for possible
@@ -248,6 +248,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   </Target>
 
   <UsingTask TaskName="ResolveFrameworkReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="ResolveFrameworkReferences" TaskMode="Static" />
 
   <!--
     ============================================================
@@ -405,6 +406,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <UsingTask TaskName="GetPackageDirectory" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
   <UsingTask TaskName="ResolveTargetingPackAssets" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="GetPackageDirectory" TaskMode="Static" />
+  <UsingTaskPrecomputationMode TaskName="ResolveTargetingPackAssets" TaskMode="Static" />
 
   <!--
     ============================================================

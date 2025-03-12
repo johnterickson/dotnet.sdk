@@ -17,9 +17,9 @@ Copyright (c) .NET Foundation. All rights reserved.
   </PropertyGroup>
 
   <UsingTask TaskName="GetDependsOnNETStandard" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" />
-  <UsingTask TaskName="NETBuildExtensionsError" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" />
-  <UsingTask TaskName="NETBuildExtensionsWarning" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" />
-  <UsingTask TaskName="AddFacadesToReferences" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" />
+  <UsingTask TaskName="NETBuildExtensionsError" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="NETBuildExtensionsWarning" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="AddFacadesToReferences" AssemblyFile="$(MicrosoftNETBuildExtensionsTasksAssembly)" PrecomputationMode="Static" />
 
   <Target Name="ImplicitlyExpandNETStandardFacades"
           Condition="'$(ImplicitlyExpandNETStandardFacades)' == 'true'"

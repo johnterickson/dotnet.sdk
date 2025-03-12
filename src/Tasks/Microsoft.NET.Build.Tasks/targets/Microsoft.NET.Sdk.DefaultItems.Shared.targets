@@ -71,8 +71,8 @@ Copyright (c) .NET Foundation. All rights reserved.
                       AllowExplicitVersion="true"/>
   </ItemGroup>
   
-  <UsingTask TaskName="ApplyImplicitVersions" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="CheckIfPackageReferenceShouldBeFrameworkReference" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="ApplyImplicitVersions" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="CheckIfPackageReferenceShouldBeFrameworkReference" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
 
   <Target Name="UpdateAspNetToFrameworkReference"
           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' And '$(_TargetFrameworkVersionWithoutV)' >= '3.0'">
@@ -141,7 +141,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
   </Target>
   
-  <UsingTask TaskName="CheckForImplicitPackageReferenceOverrides" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="CheckForImplicitPackageReferenceOverrides" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
 
   <!-- Remove package references with metadata IsImplicitlyDefined = true, if there are other PackageReference items with the same identity -->
   <Target Name="CheckForImplicitPackageReferenceOverrides" BeforeTargets="_CheckForInvalidConfigurationAndPlatform;CollectPackageReferences">
@@ -175,6 +175,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   </Target>
 
   <UsingTask TaskName="CheckForDuplicateItems" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTaskPrecomputationMode TaskName="CheckForDuplicateItems" TaskMode="Static" />
 
   <Target Name="CheckForDuplicateItems" BeforeTargets="_CheckForInvalidConfigurationAndPlatform;CoreCompile">
 
