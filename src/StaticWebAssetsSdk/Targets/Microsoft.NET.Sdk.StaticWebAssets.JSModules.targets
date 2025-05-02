@@ -169,6 +169,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <PropertyGroup>
       <_JSModuleBuildManifestPath>$(IntermediateOutputPath)jsmodules\jsmodules.build.manifest.json</_JSModuleBuildManifestPath>
+      <_JSModuleBuildManifestPath Condition="'$(PrecomputeOutputDir)' != ''">$(PrecomputeOutputDir)jsmodules\jsmodules.build.manifest.json</_JSModuleBuildManifestPath>
       <JSModuleManifestRelativePath Condition="'$(JSModuleManifestRelativePath)' == ''">$(PackageId).modules.json</JSModuleManifestRelativePath>
     </PropertyGroup>
 

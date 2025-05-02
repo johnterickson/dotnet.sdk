@@ -56,14 +56,14 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="ResolveAllPublishStaticWebAssets" DependsOnTargets="ResolveCorePublishStaticWebAssets;ResolvePublishStaticWebAssets;ResolvePublishRelatedStaticWebAssets" />
 
-  <Target Name="LoadStaticWebAssetsBuildManifest" BeforeTargets="ComputeResolvedFilesToPublishList">
+  <Target Name="LoadStaticWebAssetsBuildManifest" BeforeTargets="ComputeResolvedFilesToPublishList" Condition="'$(GeneratedWebAssetManifests)' != 'true'"> <!-- if we just generated it let's assume that we already have all the state - in the future maybe have this validate that?-->
     <!-- Before we load assets from the manifest we cleanup any potential existing asset that might be present by default
          for example, assets from packages as a result of a publish (no-build) invocation. Those assets were already taken
          into account when we built the build manifest that we are about to load for resuming the publish process. -->
     <PropertyGroup>
         <_ShouldLoadBuildManifestAndUpdateAssets>false</_ShouldLoadBuildManifestAndUpdateAssets>
         <_ShouldLoadBuildManifestAndUpdateAssets
-          Condition="@(_CachedBuildStaticWebAssets) == '' or @(_CachedBuildStaticWebAssetDiscoveryPatterns) == '' or @(_CachedBuildStaticWebAssetReferencedProjectsConfiguration) == ''">true</_ShouldLoadBuildManifestAndUpdateAssets>
+          Condition="(@(_CachedBuildStaticWebAssets) == '' or @(_CachedBuildStaticWebAssetDiscoveryPatterns) == '' or @(_CachedBuildStaticWebAssetReferencedProjectsConfiguration) == '')">true</_ShouldLoadBuildManifestAndUpdateAssets>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1061,7 +1061,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_ComputeReferenceAssemblies"
           DependsOnTargets="ResolveReferences"
           PrecomputeMerge="ResolveReferences"
-          Deferred="Item:ReferencePath;Item:_FrameworkReferenceAssemblies;Item:_ReferenceOnlyAssemblies"
+          Deferred="Item:ReferencePath;Item:_FrameworkReferenceAssemblies;Item:_ReferenceOnlyAssemblies;Item:_ReferenceAssemblies"
           >
 
     <ItemGroup PrecomputationMode="Deferred">
@@ -1199,9 +1199,11 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask TaskName="GetAssemblyAttributes" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
 
   <Target Name="CoreGenerateSatelliteAssemblies"
+          PrecomputeMerge="CoreGenerateSatelliteAssemblies"
           DependsOnTargets="ResolveAssemblyReferences;_GetAssemblyInfoFromTemplateFile"
           Inputs="$(MSBuildAllProjects);@(_SatelliteAssemblyResourceInputs);$(IntermediateOutputPath)$(TargetName)$(TargetExt)"
           Outputs="$(IntermediateOutputPath)%(Culture)\$(TargetName).resources.dll"
+          Deferred="Item:_SatelliteAssemblyReferences;Item:SatelliteAssemblyAttribute"
           Condition="'@(_SatelliteAssemblyResourceInputs)' != ''  and '$(GenerateSatelliteAssembliesForCore)' == 'true' ">
 
     <MakeDir Directories="@(_SatelliteAssemblyResourceInputs->'$(IntermediateOutputPath)%(Culture)')" />
@@ -1211,7 +1213,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       <_OutputAssembly>$(IntermediateOutputPath)%(_SatelliteAssemblyResourceInputs.Culture)\$(TargetName).resources.dll</_OutputAssembly>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup PrecomputationMode="Deferred">
       <SatelliteAssemblyAttribute Include="System.Reflection.AssemblyCultureAttribute" Condition="'%(_SatelliteAssemblyResourceInputs.Culture)' != ''">
         <_Parameter1>%(_SatelliteAssemblyResourceInputs.Culture)</_Parameter1>
       </SatelliteAssemblyAttribute>
@@ -1225,7 +1227,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       <UseSharedCompilation>true</UseSharedCompilation>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup PrecomputationMode="Deferred">
       <_SatelliteAssemblyReferences Remove="@(_SatelliteAssemblyReferences)" />
       <_SatelliteAssemblyReferences Include="@(ReferencePath)" Condition="'%(Filename)' == 'mscorlib' or '%(Filename)' == 'netstandard' or '%(Filename)' == 'System.Runtime' " />
     </ItemGroup>
@@ -1258,12 +1260,12 @@ Copyright (c) .NET Foundation. All rights reserved.
     </Csc>
   </Target>
 
-  <Target Name="_GetAssemblyInfoFromTemplateFile">
+  <Target Name="_GetAssemblyInfoFromTemplateFile" PrecomputeMerge="CoreGenerateSatelliteAssemblies" Deferred="Item:SatelliteAssemblyAttribute">
     <GetAssemblyAttributes PathToTemplateFile="$(IntermediateOutputPath)$(TargetName)$(TargetExt)" >
       <Output TaskParameter="AssemblyAttributes" ItemName="_AssemblyAttributesFromTemplateFile" />
     </GetAssemblyAttributes>
 
-    <ItemGroup>
+    <ItemGroup PrecomputationMode="Deferred">
       <SatelliteAssemblyAttribute Include="@(_AssemblyAttributesFromTemplateFile)" />
     </ItemGroup>
 

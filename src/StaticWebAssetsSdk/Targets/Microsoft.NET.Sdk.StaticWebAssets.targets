@@ -638,6 +638,10 @@ Copyright (c) .NET Foundation. All rights reserved.
       ManifestPath="$(StaticWebAssetDevelopmentManifestPath)">
     </GenerateStaticWebAssetsDevelopmentManifest>
 
+    <PropertyGroup>
+      <GeneratedWebAssetManifests>true</GeneratedWebAssetManifests>
+    </PropertyGroup>
+
     <ItemGroup>
       <FileWrites Include="$(StaticWebAssetBuildManifestPath)" />
       <FileWrites Include="$(StaticWebAssetDevelopmentManifestPath)" />
