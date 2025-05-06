@@ -1064,8 +1064,8 @@ Copyright (c) .NET Foundation. All rights reserved.
           Deferred="Item:ReferencePath;Item:_FrameworkReferenceAssemblies;Item:_ReferenceOnlyAssemblies;Item:_ReferenceAssemblies"
           >
 
-    <ItemGroup PrecomputationMode="Deferred">
-      <_FrameworkReferenceAssemblies Include="@(ReferencePath)"
+    <ItemGroup>
+      <_FrameworkReferenceAssemblies Deferred="true" Include="@(ReferencePath)"
                                      Condition="(%(ReferencePath.FrameworkFile) == 'true' or
                                                 %(ReferencePath.ResolvedFrom) == 'ImplicitlyExpandDesignTimeFacades')
                                             and ('%(ReferencePath.NuGetSourceType)' == ''  or
@@ -1079,13 +1079,13 @@ Copyright (c) .NET Foundation. All rights reserved.
       3. ProgramFiles\Reference Assemblies
       These assemblies need to be copied to the 'refs' folder for both build and publish.
       -->
-      <_ReferenceOnlyAssemblies Include="@(ReferencePath)"
+      <_ReferenceOnlyAssemblies Deferred="true" Include="@(ReferencePath)"
                                 Exclude="@(_FrameworkReferenceAssemblies)"
                                 Condition="%(ReferencePath.CopyLocal) != 'true' and
                                            %(ReferencePath.NuGetSourceType) == ''" />
 
-      <_ReferenceAssemblies Include="@(_FrameworkReferenceAssemblies)" />
-      <_ReferenceAssemblies Include="@(_ReferenceOnlyAssemblies)" />
+      <_ReferenceAssemblies Deferred="true" Include="@(_FrameworkReferenceAssemblies)" />
+      <_ReferenceAssemblies Deferred="true" Include="@(_ReferenceOnlyAssemblies)" />
     </ItemGroup>
 
   </Target>
@@ -1101,18 +1101,18 @@ Copyright (c) .NET Foundation. All rights reserved.
     DependsOnTargets="ResolveReferences"
     PrecomputeMerge="ResolveReferences"
     Deferred="Item:ReferencePath;Item:ReferenceDependencyPaths;Item:UserRuntimeAssembly">
-    <ItemGroup PrecomputationMode="Deferred">
+    <ItemGroup>
       <!-- IncludeRuntimeDependency=true metadata is escape hatch to include a non-copy local reference in deps file as a runtime dependency -->
-      <ReferencePath>
+      <ReferencePath Deferred="true">
         <IncludeRuntimeDependency Condition="'%(ReferencePath.IncludeRuntimeDependency)' == '' and '%(ReferencePath.CopyLocal)' == 'true'">true</IncludeRuntimeDependency>
       </ReferencePath>
 
-      <ReferenceDependencyPaths>
+      <ReferenceDependencyPaths Deferred="true">
         <IncludeRuntimeDependency Condition="'%(ReferenceDependencyPaths.IncludeRuntimeDependency)' == '' and '%(ReferenceDependencyPaths.CopyLocal)' == 'true'">true</IncludeRuntimeDependency>
       </ReferenceDependencyPaths>
 
-      <UserRuntimeAssembly Include="@(ReferencePath->WithMetadataValue('IncludeRuntimeDependency', 'true'))"  />
-      <UserRuntimeAssembly Include="@(ReferenceDependencyPaths->WithMetadataValue('IncludeRuntimeDependency', 'true'))" />
+      <UserRuntimeAssembly Deferred="true" Include="@(ReferencePath->WithMetadataValue('IncludeRuntimeDependency', 'true'))"  />
+      <UserRuntimeAssembly Deferred="true" Include="@(ReferenceDependencyPaths->WithMetadataValue('IncludeRuntimeDependency', 'true'))" />
     </ItemGroup>
   </Target>
 
@@ -1213,8 +1213,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       <_OutputAssembly>$(IntermediateOutputPath)%(_SatelliteAssemblyResourceInputs.Culture)\$(TargetName).resources.dll</_OutputAssembly>
     </PropertyGroup>
 
-    <ItemGroup PrecomputationMode="Deferred">
-      <SatelliteAssemblyAttribute Include="System.Reflection.AssemblyCultureAttribute" Condition="'%(_SatelliteAssemblyResourceInputs.Culture)' != ''">
+    <ItemGroup>
+      <SatelliteAssemblyAttribute Deferred="true" Include="System.Reflection.AssemblyCultureAttribute" Condition="'%(_SatelliteAssemblyResourceInputs.Culture)' != ''">
         <_Parameter1>%(_SatelliteAssemblyResourceInputs.Culture)</_Parameter1>
       </SatelliteAssemblyAttribute>
     </ItemGroup>
@@ -1227,9 +1227,9 @@ Copyright (c) .NET Foundation. All rights reserved.
       <UseSharedCompilation>true</UseSharedCompilation>
     </PropertyGroup>
 
-    <ItemGroup PrecomputationMode="Deferred">
-      <_SatelliteAssemblyReferences Remove="@(_SatelliteAssemblyReferences)" />
-      <_SatelliteAssemblyReferences Include="@(ReferencePath)" Condition="'%(Filename)' == 'mscorlib' or '%(Filename)' == 'netstandard' or '%(Filename)' == 'System.Runtime' " />
+    <ItemGroup>
+      <_SatelliteAssemblyReferences Deferred="true" Remove="@(_SatelliteAssemblyReferences)" />
+      <_SatelliteAssemblyReferences Deferred="true" Include="@(ReferencePath)" Condition="'%(Filename)' == 'mscorlib' or '%(Filename)' == 'netstandard' or '%(Filename)' == 'System.Runtime' " />
     </ItemGroup>
 
     <Csc Resources="@(_SatelliteAssemblyResourceInputs)"
@@ -1265,8 +1265,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       <Output TaskParameter="AssemblyAttributes" ItemName="_AssemblyAttributesFromTemplateFile" />
     </GetAssemblyAttributes>
 
-    <ItemGroup PrecomputationMode="Deferred">
-      <SatelliteAssemblyAttribute Include="@(_AssemblyAttributesFromTemplateFile)" />
+    <ItemGroup>
+      <SatelliteAssemblyAttribute Deferred="true" Include="@(_AssemblyAttributesFromTemplateFile)" />
     </ItemGroup>
 
   </Target>
