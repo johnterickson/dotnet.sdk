@@ -7,7 +7,7 @@ using Microsoft.NET.Sdk.StaticWebAssets.Utils;
 
 namespace Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
-public class GenerateStaticWebAssetEndpointsManifest : Task
+public class GenerateStaticWebAssetEndpointsManifest : Task, ITaskHybrid
 {
     [Required]
     public ITaskItem[] Assets { get; set; } = [];
@@ -21,7 +21,11 @@ public class GenerateStaticWebAssetEndpointsManifest : Task
     [Required] public string Source { get; set; }
 
     [Required]
-    public string ManifestPath { get; set; }
+    [Output]
+    [PrecomputeOutput]
+    public ITaskItem ManifestPath { get; set; }
+
+    public bool ExecuteStatic() => true;
 
     public override bool Execute()
     {
@@ -60,7 +64,7 @@ public class GenerateStaticWebAssetEndpointsManifest : Task
                 Endpoints = [.. filteredEndpoints]
             };
 
-            this.PersistFileIfChanged(manifest, ManifestPath);
+            this.PersistFileIfChanged(manifest, ManifestPath.ItemSpec);
         }
         catch (Exception ex)
         {

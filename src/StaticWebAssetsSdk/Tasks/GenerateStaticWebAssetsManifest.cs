@@ -8,7 +8,7 @@ using Microsoft.NET.Sdk.StaticWebAssets.Tasks;
 
 namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
 {
-    public class GenerateStaticWebAssetsManifest : Task
+    public class GenerateStaticWebAssetsManifest : Task, ITaskHybrid
     {
         // Since the manifest is only used at development time, it's ok for it to use the relaxed
         // json escaping (which is also what MVC uses by default) and to produce indented output
@@ -44,7 +44,11 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         public ITaskItem[] Endpoints { get; set; }
 
         [Required]
-        public string ManifestPath { get; set; }
+        [Output]
+        [PrecomputeOutput]
+        public ITaskItem ManifestPath { get; set; }
+
+        public bool ExecuteStatic() => true;
 
         public override bool Execute()
         {
@@ -127,18 +131,18 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         private void PersistManifest(StaticWebAssetsManifest manifest)
         {
             var data = JsonSerializer.SerializeToUtf8Bytes(manifest, ManifestSerializationOptions);
-            var fileExists = File.Exists(ManifestPath);
-            var existingManifestHash = fileExists ? StaticWebAssetsManifest.FromJsonBytes(File.ReadAllBytes(ManifestPath)).Hash : "";
+            var fileExists = File.Exists(ManifestPath.ItemSpec);
+            var existingManifestHash = fileExists ? StaticWebAssetsManifest.FromJsonBytes(File.ReadAllBytes(ManifestPath.ItemSpec)).Hash : "";
 
             if (!fileExists)
             {
-                Log.LogMessage(MessageImportance.Low, $"Creating manifest because manifest file '{ManifestPath}' does not exist.");
-                File.WriteAllBytes(ManifestPath, data);
+                Log.LogMessage(MessageImportance.Low, $"Creating manifest because manifest file '{ManifestPath.ItemSpec}' does not exist.");
+                File.WriteAllBytes(ManifestPath.ItemSpec, data);
             }
             else if (!string.Equals(manifest.Hash, existingManifestHash, StringComparison.Ordinal))
             {
                 Log.LogMessage(MessageImportance.Low, $"Updating manifest because manifest version '{manifest.Hash}' is different from existing manifest hash '{existingManifestHash}'.");
-                File.WriteAllBytes(ManifestPath, data);
+                File.WriteAllBytes(ManifestPath.ItemSpec, data);
             }
             else
             {

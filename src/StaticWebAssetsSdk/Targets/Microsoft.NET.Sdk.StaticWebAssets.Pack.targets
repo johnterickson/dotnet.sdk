@@ -75,7 +75,8 @@ Copyright (c) .NET Foundation. All rights reserved.
        targets into their packages are expected to disable the generation of $(PackageId).props files and
        to manually import build\Microsoft.AspNetCore.StaticWebAssets.props in their custom props files.
    -->
-  <Target Name="GenerateStaticWebAssetsPackFiles" AfterTargets="GenerateStaticWebAssetsManifest">
+  <Target Name="GenerateStaticWebAssetsPackFiles" AfterTargets="GenerateStaticWebAssetsManifest"
+    Deferred="Item:_PackStaticWebAssets:w;Item:_PackStaticWebAssetEndpoints:w;Item:_PackStaticWebAssetWithTargetPath:w;Item:_PackStaticWebAssetCandidatesResolved:w">
 
     <ItemGroup>
 
@@ -113,6 +114,11 @@ Copyright (c) .NET Foundation. All rights reserved.
       <_PackStaticWebAssetCandidates Include="@(StaticWebAsset)" Exclude="@(_StaticWebAssetExcludedFromPack)" />
     </ItemGroup>
 
+    <ResolveStaticWebAssetFingerprints Assets="@(_PackStaticWebAssetCandidates)">
+      <Output TaskParameter="Assets" ItemName="_PackStaticWebAssetCandidatesResolved" />
+    </ResolveStaticWebAssetFingerprints>
+
+
     <!-- The logic for computing the static web assets to pack, is the same logic that we use to determine what assets we need
       to provide when a referencing project asks for a list of static web assets on our current project. For example, this
       avoids us including things like the transitive bundles for scoped css in the package.
@@ -135,7 +141,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     -->
     <ComputeReferenceStaticWebAssetItems
-      Assets="@(_PackStaticWebAssetCandidates)"
+      Assets="@(_PackStaticWebAssetCandidatesResolved)"
       ProjectMode="$(StaticWebAssetProjectMode)"
       AssetKind="Publish"
       Source="$(PackageId)"
@@ -143,7 +149,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     >
       <Output TaskParameter="StaticWebAssets" ItemName="_PackStaticWebAssets" />
     </ComputeReferenceStaticWebAssetItems>
-
     <!-- This is similar to what we do when providing assets as reference. We use _PackStaticWebAssets as ComputeEndpointsForReferenceStaticWebAssets
       discards any endpoint that doesn't have a matching asset, which acts as a filter to ensure we only provide the relevant endpoints.
     -->

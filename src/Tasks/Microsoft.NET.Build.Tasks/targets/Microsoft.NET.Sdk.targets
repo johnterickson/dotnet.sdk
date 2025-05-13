@@ -296,7 +296,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           Condition="'$(GenerateDependencyFile)' == 'true'"
           Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects)"
           PrecomputeInputs="@(ResolvedCompileFileDefinitions);@(ReferencePathPrecomputeInputs)"
-          Deferred="Item:UserRuntimeAssembly;Item:ReferencePath;Item:ReferenceDependencyPaths"
+          Deferred="Item:UserRuntimeAssembly:r;Item:ReferencePath:r;Item:ReferenceDependencyPaths:r"
           Outputs="$(ProjectDepsFilePath)">
 
     <!-- Set a dummy Version if it hasn't been set by DefaultAssemblyInfo.targets -->
@@ -1061,7 +1061,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_ComputeReferenceAssemblies"
           DependsOnTargets="ResolveReferences"
           PrecomputeMerge="ResolveReferences"
-          Deferred="Item:ReferencePath;Item:_FrameworkReferenceAssemblies;Item:_ReferenceOnlyAssemblies;Item:_ReferenceAssemblies"
+          Deferred="Item:ReferencePath:r;Item:_FrameworkReferenceAssemblies:w;Item:_ReferenceOnlyAssemblies:w;Item:_ReferenceAssemblies:w"
           >
 
     <ItemGroup>
@@ -1100,7 +1100,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_ComputeUserRuntimeAssemblies" 
     DependsOnTargets="ResolveReferences"
     PrecomputeMerge="ResolveReferences"
-    Deferred="Item:ReferencePath;Item:ReferenceDependencyPaths;Item:UserRuntimeAssembly">
+    Deferred="Item:ReferencePath:w;Item:ReferenceDependencyPaths:w;Item:UserRuntimeAssembly:w">
     <ItemGroup>
       <!-- IncludeRuntimeDependency=true metadata is escape hatch to include a non-copy local reference in deps file as a runtime dependency -->
       <ReferencePath Deferred="true">
@@ -1199,11 +1199,13 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask TaskName="GetAssemblyAttributes" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
 
   <Target Name="CoreGenerateSatelliteAssemblies"
+          DisplayName="Generate Satellite Assembly $(IntermediateOutputPath)%(Culture)\$(TargetName).resources.dll"
           PrecomputeMerge="CoreGenerateSatelliteAssemblies"
           DependsOnTargets="ResolveAssemblyReferences;_GetAssemblyInfoFromTemplateFile"
-          Inputs="$(MSBuildAllProjects);@(_SatelliteAssemblyResourceInputs);$(IntermediateOutputPath)$(TargetName)$(TargetExt)"
+          Inputs="$(MSBuildAllProjects);@(_SatelliteAssemblyResourceInputs);$(IntermediateOutputPath)$(TargetName)$(TargetExt);$(KeyOriginatorFile)"
+          PrecomputeInputs="@(CoreCompileInputs)"
           Outputs="$(IntermediateOutputPath)%(Culture)\$(TargetName).resources.dll"
-          Deferred="Item:_SatelliteAssemblyReferences;Item:SatelliteAssemblyAttribute"
+          Deferred="Item:_SatelliteAssemblyReferences:w;Item:SatelliteAssemblyAttribute:w;Item:_SatelliteAssemblyResourceInputs:r;Item:ReferencePath:r"
           Condition="'@(_SatelliteAssemblyResourceInputs)' != ''  and '$(GenerateSatelliteAssembliesForCore)' == 'true' ">
 
     <MakeDir Directories="@(_SatelliteAssemblyResourceInputs->'$(IntermediateOutputPath)%(Culture)')" />
@@ -1260,8 +1262,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     </Csc>
   </Target>
 
-  <Target Name="_GetAssemblyInfoFromTemplateFile" PrecomputeMerge="CoreGenerateSatelliteAssemblies" Deferred="Item:SatelliteAssemblyAttribute">
-    <GetAssemblyAttributes PathToTemplateFile="$(IntermediateOutputPath)$(TargetName)$(TargetExt)" >
+  <Target Name="_GetAssemblyInfoFromTemplateFile" Deferred="Item:SatelliteAssemblyAttribute:w;Item:_AssemblyAttributesFromTemplateFile:w">
+    <GetAssemblyAttributes PathToTemplateFile="$(IntermediateOutputPath)$(TargetName)$(TargetExt)" PrecomputeInputs="$(IntermediateOutputPath)$(TargetName)$(TargetExt)" >
       <Output TaskParameter="AssemblyAttributes" ItemName="_AssemblyAttributesFromTemplateFile" />
     </GetAssemblyAttributes>
 
@@ -1295,7 +1297,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_BlockWinMDsOnUnsupportedTFMs"
           AfterTargets="PreBuildEvent"
           DependsOnTargets="ResolveReferences"
-          Deferred="Item:ReferencePath"
+          Deferred="Item:ReferencePath:r"
           PrecomputationMode="Skip"
           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '5.0'))">
 

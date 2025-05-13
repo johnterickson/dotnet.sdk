@@ -404,10 +404,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </Target>
 
-  <UsingTask TaskName="GetPackageDirectory" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTask TaskName="ResolveTargetingPackAssets" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <UsingTaskPrecomputationMode TaskName="GetPackageDirectory" TaskMode="Static" />
-  <UsingTaskPrecomputationMode TaskName="ResolveTargetingPackAssets" TaskMode="Static" />
+  <UsingTask TaskName="GetPackageDirectory" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <UsingTask TaskName="ResolveTargetingPackAssets" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
 
   <!--
     ============================================================
@@ -433,7 +431,7 @@ Copyright (c) .NET Foundation. All rights reserved.
                                 NuGetRestoreSupported="$(_NuGetRestoreSupported)"
                                 DisableTransitiveFrameworkReferenceDownloads="$(DisableTransitiveFrameworkReferenceDownloads)"
                                 NetCoreTargetingPackRoot="$(NetCoreTargetingPackRoot)">
-      <Output TaskParameter="ReferencesToAdd" ItemName="Reference" />
+      <Output TaskParameter="ReferencesToAdd" ItemName="ReferencesToAdd" />
       <Output TaskParameter="AnalyzersToAdd" ItemName="Analyzer" />
       <Output TaskParameter="PlatformManifests" ItemName="PlatformManifestsFromTargetingPacks" />
       <Output TaskParameter="PackageConflictPreferredPackages" PropertyName="PackageConflictPreferredPackages" />
@@ -455,6 +453,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup>
       <RuntimeFramework Remove="@(RuntimeFramework)" />
       <RuntimeFramework Include="@(_UsedRuntimeFramework)" />
+      <Reference Include="@(ReferencesToAdd)" />
+      <CoreCompileInputs Include="@(ReferencesToAdd)" />
     </ItemGroup>
   </Target>
 

@@ -73,6 +73,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
 
         public string CopyToPublishDirectory { get; set; } = StaticWebAsset.AssetCopyOptions.PreserveNewest;
 
+        public string DeferredFingerprint { get; set; }
+
         [Output]
         public ITaskItem[] Assets { get; set; }
 
@@ -159,6 +161,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                     var relatedAsset = ComputePropertyValue(candidate, nameof(StaticWebAsset.RelatedAsset), RelatedAsset, !StaticWebAsset.AssetRoles.IsPrimary(assetRole));
                     var assetTraitName = ComputePropertyValue(candidate, nameof(StaticWebAsset.AssetTraitName), AssetTraitName, !StaticWebAsset.AssetRoles.IsPrimary(assetRole));
                     var assetTraitValue = ComputePropertyValue(candidate, nameof(StaticWebAsset.AssetTraitValue), AssetTraitValue, !StaticWebAsset.AssetRoles.IsPrimary(assetRole));
+                    var deferredFingerprint = ComputePropertyValue(candidate, nameof(StaticWebAsset.DeferredFingerprint), DeferredFingerprint, isRequired: false);
 
                     var copyToOutputDirectory = ComputePropertyValue(candidate, nameof(StaticWebAsset.CopyToOutputDirectory), CopyToOutputDirectory);
                     var copyToPublishDirectory = ComputePropertyValue(candidate, nameof(StaticWebAsset.CopyToPublishDirectory), CopyToPublishDirectory);
@@ -176,20 +179,24 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                     // the asset.
                     var fingerprint = ComputePropertyValue(candidate, nameof(StaticWebAsset.Fingerprint), null, false);
                     var integrity = ComputePropertyValue(candidate, nameof(StaticWebAsset.Integrity), null, false);
-                    switch ((fingerprint, integrity))
+
+                    if (deferredFingerprint != bool.TrueString)
                     {
-                        case (null, null):
-                            Log.LogMessage(MessageImportance.Low, "Computing fingerprint and integrity for asset '{0}'", candidate.ItemSpec);
-                            (fingerprint, integrity) = (StaticWebAsset.ComputeFingerprintAndIntegrity(candidate.ItemSpec, originalItemSpec));
-                            break;
-                        case (null, not null):
-                            Log.LogMessage(MessageImportance.Low, "Computing fingerprint for asset '{0}'", candidate.ItemSpec);
-                            fingerprint = FileHasher.ToBase36(Convert.FromBase64String(integrity));
-                            break;
-                        case (not null, null):
-                            Log.LogMessage(MessageImportance.Low, "Computing integrity for asset '{0}'", candidate.ItemSpec);
-                            integrity = StaticWebAsset.ComputeIntegrity(candidate.ItemSpec, originalItemSpec);
-                            break;
+                        switch ((fingerprint, integrity))
+                        {
+                            case (null, null):
+                                Log.LogMessage(MessageImportance.Low, "Computing fingerprint and integrity for asset '{0}'", candidate.ItemSpec);
+                                (fingerprint, integrity) = (StaticWebAsset.ComputeFingerprintAndIntegrity(candidate.ItemSpec, originalItemSpec));
+                                break;
+                            case (null, not null):
+                                Log.LogMessage(MessageImportance.Low, "Computing fingerprint for asset '{0}'", candidate.ItemSpec);
+                                fingerprint = FileHasher.ToBase36(Convert.FromBase64String(integrity));
+                                break;
+                            case (not null, null):
+                                Log.LogMessage(MessageImportance.Low, "Computing integrity for asset '{0}'", candidate.ItemSpec);
+                                integrity = StaticWebAsset.ComputeIntegrity(candidate.ItemSpec, originalItemSpec);
+                                break;
+                        }
                     }
 
                     // If we are not able to compute the value based on an existing value or a default, we produce an error and stop.
@@ -236,7 +243,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                         integrity,
                         copyToOutputDirectory,
                         copyToPublishDirectory,
-                        originalItemSpec);
+                        originalItemSpec,
+                        deferredFingerprint);
 
                     asset.Normalize();
                     var item = asset.ToTaskItem();

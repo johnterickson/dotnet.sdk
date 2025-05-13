@@ -8,10 +8,12 @@ using Microsoft.NET.Sdk.StaticWebAssets.Tasks;
 
 namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
 {
-    public class GenerateStaticWebAssetEndpointsPropsFile : Task
+    public class GenerateStaticWebAssetEndpointsPropsFile : Task, ITaskHybrid
     {
         [Required]
-        public string TargetPropsFilePath { get; set; }
+        [Output]
+        [PrecomputeOutput]
+        public ITaskItem TargetPropsFilePath { get; set; }
 
         public string PackagePathPrefix { get; set; } = "staticwebassets";
 
@@ -20,6 +22,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
 
         [Required]
         public ITaskItem[] StaticWebAssetEndpoints { get; set; }
+
+        public bool ExecuteStatic() => true;
 
         public override bool Execute()
         {
@@ -88,18 +92,18 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         private void WriteFile(byte[] data)
         {
             var dataHash = ComputeHash(data);
-            var fileExists = File.Exists(TargetPropsFilePath);
-            var existingFileHash = fileExists ? ComputeHash(File.ReadAllBytes(TargetPropsFilePath)) : "";
+            var fileExists = File.Exists(TargetPropsFilePath.ItemSpec);
+            var existingFileHash = fileExists ? ComputeHash(File.ReadAllBytes(TargetPropsFilePath.ItemSpec)) : "";
 
             if (!fileExists)
             {
-                Log.LogMessage(MessageImportance.Low, $"Creating file '{TargetPropsFilePath}' does not exist.");
-                File.WriteAllBytes(TargetPropsFilePath, data);
+                Log.LogMessage(MessageImportance.Low, $"Creating file '{TargetPropsFilePath.ItemSpec}' does not exist.");
+                File.WriteAllBytes(TargetPropsFilePath.ItemSpec, data);
             }
             else if (!string.Equals(dataHash, existingFileHash, StringComparison.Ordinal))
             {
-                Log.LogMessage(MessageImportance.Low, $"Updating '{TargetPropsFilePath}' file because the hash '{dataHash}' is different from existing file hash '{existingFileHash}'.");
-                File.WriteAllBytes(TargetPropsFilePath, data);
+                Log.LogMessage(MessageImportance.Low, $"Updating '{TargetPropsFilePath.ItemSpec}' file because the hash '{dataHash}' is different from existing file hash '{existingFileHash}'.");
+                File.WriteAllBytes(TargetPropsFilePath.ItemSpec, data);
             }
             else
             {

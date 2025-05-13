@@ -29,7 +29,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   -->
 
   <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.GenerateJsModuleManifest" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ApplyJsModules" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ApplyJsModules" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" PrecomputationMode="Static" />
 
   <PropertyGroup>
     <GenerateJSModuleManifest Condition="$(GenerateJSModuleManifest) == ''">true</GenerateJSModuleManifest>
@@ -88,7 +88,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </PropertyGroup>
 
-  <Target Name="ResolveJsInitializerModuleStaticWebAssets">
+  <Target Name="ResolveJsInitializerModuleStaticWebAssets"
+    Deferred="Item:StaticWebAssetResolved:w;Item:StaticWebAssetEndpoint:w;Item:_JSModuleStaticWebAssetResolved:w;Item:_JSModuleStaticWebAssetEndpoint:w;Item:_FilteredJSModuleStaticWebAssetEndpoint:w;Item:_MissingJSModuleStaticWebAsset:w;Item:_FilteredJSModuleStaticWebAssetEndpointWithProperty:w">
 
     <ItemGroup>
       <_JSModuleCandidates Include="@(StaticWebAsset)" Condition="'%(SourceType)' == 'Discovered'" />
@@ -105,12 +106,17 @@ Copyright (c) .NET Foundation. All rights reserved.
       RelativePathFilter="**/$(PackageId).lib.module.js"
       PropertyOverrides="AssetTraitName;AssetTraitValue"
       AssetMergeSource="$(StaticWebAssetMergeTarget)"
+      DeferredFingerprint="$(IsPrecomputePhase)"
     >
       <Output TaskParameter="Assets" ItemName="_JSModuleStaticWebAsset" />
     </DefineStaticWebAssets>
 
+    <ResolveStaticWebAssetFingerprints Assets="@(_JSModuleStaticWebAsset)">
+      <Output TaskParameter="Assets" ItemName="_JSModuleStaticWebAssetResolved" />
+    </ResolveStaticWebAssetFingerprints>
+
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(_JSModuleStaticWebAsset)"
+      CandidateAssets="@(_JSModuleStaticWebAssetResolved)"
       ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)"
     >
@@ -135,15 +141,15 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <FilterStaticWebAssetEndpoints Condition="'@(_JSModuleStaticWebAsset)' != ''"
       Endpoints="@(StaticWebAssetEndpoint);@(_JSModuleStaticWebAssetEndpoint)"
-      Assets="@(_JSModuleStaticWebAsset)"
+      Assets="@(_JSModuleStaticWebAssetResolved)"
       Filters=""
     >
       <Output TaskParameter="FilteredEndpoints" ItemName="_FilteredJSModuleStaticWebAssetEndpoint" />
       <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_MissingJSModuleStaticWebAsset" />
     </FilterStaticWebAssetEndpoints>
 
-    <Error Condition="'@(_MissingJSModuleStaticWebAsset)' != ''"
-      Text="The following JS module files do not have matching endpoints: @(_MissingJSModuleStaticWebAsset->'%(Identity)')" />
+    <Error PrecomputationMode="Dynamic" DeferredCondition="'@(_MissingJSModuleStaticWebAsset)' != ''"
+      Text="The following JS module files do not have matching endpoints: @(_MissingJSModuleStaticWebAsset)" />
 
     <UpdateStaticWebAssetEndpoints
       Condition="'@(_AddPropertyToInitializers)' != ''"
@@ -157,8 +163,9 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup>
       <StaticWebAsset Remove="@(_JSModuleStaticWebAsset)" />
       <StaticWebAsset Include="@(_JSModuleStaticWebAsset)" />
-      <StaticWebAssetEndpoint Remove="@(_FilteredJSModuleStaticWebAssetEndpointWithProperty)" />
-      <StaticWebAssetEndpoint Include="@(_FilteredJSModuleStaticWebAssetEndpointWithProperty)" />
+      <StaticWebAssetResolved Deferred="true" Include="@(_JSModuleStaticWebAssetResolved)" />
+      <StaticWebAssetEndpoint Deferred="true" Remove="@(_FilteredJSModuleStaticWebAssetEndpointWithProperty)" />
+      <StaticWebAssetEndpoint Deferred="true" Include="@(_FilteredJSModuleStaticWebAssetEndpointWithProperty)" />
     </ItemGroup>
 
   </Target>
@@ -169,7 +176,6 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <PropertyGroup>
       <_JSModuleBuildManifestPath>$(IntermediateOutputPath)jsmodules\jsmodules.build.manifest.json</_JSModuleBuildManifestPath>
-      <_JSModuleBuildManifestPath Condition="'$(PrecomputeOutputDir)' != ''">$(PrecomputeOutputDir)jsmodules\jsmodules.build.manifest.json</_JSModuleBuildManifestPath>
       <JSModuleManifestRelativePath Condition="'$(JSModuleManifestRelativePath)' == ''">$(PackageId).modules.json</JSModuleManifestRelativePath>
     </PropertyGroup>
 
@@ -190,7 +196,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </Target>
 
-  <Target Name="GenerateJSModuleManifestBuildStaticWebAssets" DependsOnTargets="$(GenerateJSModuleManifestBuildStaticWebAssetsDependsOn)">
+  <Target Name="GenerateJSModuleManifestBuildStaticWebAssets" DependsOnTargets="$(GenerateJSModuleManifestBuildStaticWebAssetsDependsOn)"
+    Deferred="Item:_FilteredBuildJSModulesEndpoints:w;Item:_ExistingBuildJSModulesWithoutFingerprint:w;Item:_BuildJSModulessWithoutEndpoints:w;Item:_ResolvedJSBuildModuleEndpoints:w">
 
   <!-- Incrementalism is built into the task itself. -->
   <ItemGroup>
@@ -215,7 +222,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_ExistingBuildJSModulesWithoutFingerprint" />
   </FilterStaticWebAssetEndpoints>
 
-  <FilterStaticWebAssetEndpoints Condition="'$(StaticWebAssetStandaloneHosting)' != 'true' and '@(_ExistingBuildJSModulesWithoutFingerprint)' != ''"
+  <FilterStaticWebAssetEndpoints Condition="'$(StaticWebAssetStandaloneHosting)' != 'true'" DeferredCondition="'@(_ExistingBuildJSModulesWithoutFingerprint)' != ''"
     Endpoints="@(StaticWebAssetEndpoint)"
     Assets="@(_ExistingBuildJSModulesWithoutFingerprint)"
     Filters="@(_JsModuleBuildManifestFiltersNoFingerprint)"
@@ -224,8 +231,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_BuildJSModulessWithoutEndpoints" />
   </FilterStaticWebAssetEndpoints>
 
-  <Error Condition="'@(_ExistingBuildJSModules)' != '' and '@(_BuildJSModulessWithoutEndpoints)' != ''"
-    Text="The following scoped css bundles do not have matching endpoints: @(_BuildJSModulessWithoutEndpoints->'%(RelativePath)')" />
+  <Error Condition="'@(_ExistingBuildJSModules)' != ''" DeferredCondition="'@(_BuildJSModulessWithoutEndpoints)' != ''"
+    Text="The following scoped css bundles do not have matching endpoints: @(_BuildJSModulessWithoutEndpoints)" />
 
   <ResolveStaticWebAssetEndpointRoutes
     Condition="'@(_ExistingBuildJSModules)' != ''"
@@ -240,7 +247,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       OutputFile="@(_JsModuleBuildManifestCandidate)"
       JsModules="@(_ResolvedJSBuildModuleEndpoints)" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <FileWrites Condition="'@(_ExistingBuildJSModules)' != ''" Include="@(_JsModuleBuildManifestCandidate)" />
     </ItemGroup>
 
@@ -248,6 +255,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="ResolveJSModuleManifestBuildStaticWebAssets" DependsOnTargets="$(ResolveJSModuleManifestBuildStaticWebAssetsDependsOn)"
     Condition="'$(GenerateJSModuleManifest)' == 'true'"
+    Deferred="Item:_BuildJsModuleManifestStaticWebAssetResolved:w;Item:_BuildJsModuleManifestStaticWebAssetEndpoint:w;Item:StaticWebAssetEndpoint:w"
   >
     <DefineStaticWebAssets Condition="@(_ExistingBuildJSModules) != ''"
       CandidateAssets="@(_JsModuleBuildManifestCandidate)"
@@ -261,12 +269,17 @@ Copyright (c) .NET Foundation. All rights reserved.
       AssetMergeSource="$(StaticWebAssetMergeTarget)"
       AssetTraitName="JSModule"
       AssetTraitValue="JSModuleManifest"
+      DeferredFingerprint="$(IsPrecomputePhase)"
     >
       <Output TaskParameter="Assets" ItemName="_BuildJsModuleManifestStaticWebAsset" />
     </DefineStaticWebAssets>
 
+    <ResolveStaticWebAssetFingerprints Assets="@(_BuildJsModuleManifestStaticWebAsset)">
+      <Output TaskParameter="Assets" ItemName="_BuildJsModuleManifestStaticWebAssetResolved" />
+    </ResolveStaticWebAssetFingerprints>
+
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(_BuildJsModuleManifestStaticWebAsset)"
+      CandidateAssets="@(_BuildJsModuleManifestStaticWebAssetResolved)"
       ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)"
     >
@@ -275,7 +288,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <ItemGroup>
       <StaticWebAsset Include="@(_BuildJsModuleManifestStaticWebAsset)" />
-      <StaticWebAssetEndpoint Include="@(_BuildJsModuleManifestStaticWebAssetEndpoint)" />
+      <StaticWebAssetEndpoint Deferred="true" Include="@(_BuildJsModuleManifestStaticWebAssetEndpoint)" />
     </ItemGroup>
 
   </Target>
@@ -374,6 +387,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       AssetMergeSource="$(StaticWebAssetMergeTarget)"
       AssetTraitName="JSModule"
       AssetTraitValue="JSModuleManifest"
+      DeferredFingerprint="$(IsPrecomputePhase)"
     >
       <Output TaskParameter="Assets" ItemName="_PublishJsModuleManifestStaticWebAsset" />
     </DefineStaticWebAssets>
@@ -394,7 +408,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   </Target>
 
   <!-- JS file modules -->
-  <Target Name="ResolveJSModuleStaticWebAssets" DependsOnTargets="ResolveProjectStaticWebAssets;ResolveRazorComponentInputs;ResolveRazorGenerateInputs">
+  <Target Name="ResolveJSModuleStaticWebAssets" DependsOnTargets="ResolveProjectStaticWebAssets;ResolveRazorComponentInputs;ResolveRazorGenerateInputs"
+    Deferred="Item:_ComponentJSModuleResolved:w;Item:_MvcJSModuleResolved:w;Item:_ComponentJSModuleEndpoint:w;Item:_MvcJSModuleEndpoint:w;Item:_AddPropertyToJsModules:w;Item:_JSModuleEndpointsWithProperty:w;Item:StaticWebAssetEndpoint:w">
 
     <ItemGroup>
       <!-- To avoid situations where the content is defined twice, if the user defines the JS module explicitly as
@@ -414,9 +429,15 @@ Copyright (c) .NET Foundation. All rights reserved.
       ContentRoot="$(MSBuildProjectDirectory)"
       SourceType="Discovered"
       BasePath="$(StaticWebAssetBasePath)"
-      AssetMergeSource="$(StaticWebAssetMergeTarget)">
+      AssetMergeSource="$(StaticWebAssetMergeTarget)"
+      DeferredFingerprint="$(IsPrecomputePhase)"
+      >
         <Output TaskParameter="Assets" ItemName="_ComponentJSModule" />
     </DefineStaticWebAssets>
+
+    <ResolveStaticWebAssetFingerprints Assets="@(_ComponentJSModule)">
+      <Output TaskParameter="Assets" ItemName="_ComponentJSModuleResolved" />
+    </ResolveStaticWebAssetFingerprints>
 
     <!-- **/*.cshtml.js -->
     <DefineStaticWebAssets
@@ -426,19 +447,24 @@ Copyright (c) .NET Foundation. All rights reserved.
       ContentRoot="$(MSBuildProjectDirectory)"
       SourceType="Discovered"
       BasePath="$(StaticWebAssetBasePath)"
-      AssetMergeSource="$(StaticWebAssetMergeTarget)">
+      AssetMergeSource="$(StaticWebAssetMergeTarget)"
+      DeferredFingerprint="$(IsPrecomputePhase)">
         <Output TaskParameter="Assets" ItemName="_MvcJSModule" />
     </DefineStaticWebAssets>
 
+    <ResolveStaticWebAssetFingerprints Assets="@(_MvcJSModule)">
+      <Output TaskParameter="Assets" ItemName="_MvcJSModuleResolved" />
+    </ResolveStaticWebAssetFingerprints>
+
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(_ComponentJSModule)"
+      CandidateAssets="@(_ComponentJSModuleResolved)"
       ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
         <Output TaskParameter="Endpoints" ItemName="_ComponentJSModuleEndpoint" />
     </DefineStaticWebAssetEndpoints>
 
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(_MvcJSModule)"
+      CandidateAssets="@(_MvcJSModuleResolved)"
       ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
         <Output TaskParameter="Endpoints" ItemName="_MvcJSModuleEndpoint" />
@@ -449,7 +475,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ApplyJsModules>
 
     <ItemGroup>
-      <_AddPropertyToJsModules Include="Append" Condition="'@(_MvcJSModuleEndpoint)' != '' or '@(_ComponentJSModuleEndpoint)' != ''">
+      <_AddPropertyToJsModules Deferred="true" Include="Append" Condition="'@(_MvcJSModuleEndpoint)' != '' or '@(_ComponentJSModuleEndpoint)' != ''">
         <UpdateTarget>Property</UpdateTarget>
         <Name>script-type</Name>
         <Value>module</Value>
@@ -457,7 +483,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
 
     <UpdateStaticWebAssetEndpoints
-      Condition="'@(_AddPropertyToJsModules)' != ''"
+      DeferredCondition="'@(_AddPropertyToJsModules)' != ''"
       EndpointsToUpdate="@(_MvcJSModuleEndpoint);@(_ComponentJSModuleEndpoint)"
       AllEndpoints="@(_MvcJSModuleEndpoint);@(_ComponentJSModuleEndpoint)"
       Operations="@(_AddPropertyToJsModules)"
@@ -468,7 +494,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup>
       <StaticWebAsset Remove="@(_JsFileModuleStaticWebAsset)" />
       <StaticWebAsset Include="@(_JsFileModuleStaticWebAsset)" />
-      <StaticWebAssetEndpoint Include="@(_JSModuleEndpointsWithProperty)" />
+      <StaticWebAssetEndpoint Deferred="true" Include="@(_JSModuleEndpointsWithProperty)" />
 
       <!-- Remove the items from their original groups since they've now become a StaticWebAsset -->
       <Content Remove="@(_JsFileModuleStaticWebAsset->'%(OriginalItemSpec)')" />

@@ -11,7 +11,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
     // The manifest needs to always be case sensitive, since we don't know what the final runtime environment
     // will be. The runtime is responsible for merging the tree nodes in the manifest when the underlying OS
     // is case insensitive.
-    public class GenerateStaticWebAssetsDevelopmentManifest : Task
+    public class GenerateStaticWebAssetsDevelopmentManifest : Task, ITaskHybrid
     {
         // Since the manifest is only used at development time, it's ok for it to use the relaxed
         // json escaping (which is also what MVC uses by default) and to produce indented output
@@ -31,7 +31,11 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         public ITaskItem[] Assets { get; set; }
 
         [Required]
-        public string ManifestPath { get; set; }
+        [Output]
+        [PrecomputeOutput]
+        public ITaskItem ManifestPath { get; set; }
+
+        public bool ExecuteStatic() => true;
 
         public override bool Execute()
         {
@@ -104,13 +108,13 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             using var sha256 = SHA256.Create();
             var currentHash = sha256.ComputeHash(data);
 
-            var fileExists = File.Exists(ManifestPath);
-            var existingManifestHash = fileExists ? sha256.ComputeHash(File.ReadAllBytes(ManifestPath)) : Array.Empty<byte>();
+            var fileExists = File.Exists(ManifestPath.ItemSpec);
+            var existingManifestHash = fileExists ? sha256.ComputeHash(File.ReadAllBytes(ManifestPath.ItemSpec)) : Array.Empty<byte>();
 
             if (!fileExists)
             {
-                Log.LogMessage(MessageImportance.Low, "Creating manifest because manifest file '{0}' does not exist.", ManifestPath);
-                File.WriteAllBytes(ManifestPath, data);
+                Log.LogMessage(MessageImportance.Low, "Creating manifest because manifest file '{0}' does not exist.", ManifestPath.ItemSpec);
+                File.WriteAllBytes(ManifestPath.ItemSpec, data);
             }
             else if (!currentHash.SequenceEqual(existingManifestHash))
             {
@@ -119,7 +123,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                     "Updating manifest because manifest version '{0}' is different from existing manifest hash '{1}'.",
                     Convert.ToBase64String(currentHash),
                     Convert.ToBase64String(existingManifestHash));
-                File.WriteAllBytes(ManifestPath, data);
+                File.WriteAllBytes(ManifestPath.ItemSpec, data);
             }
             else
             {

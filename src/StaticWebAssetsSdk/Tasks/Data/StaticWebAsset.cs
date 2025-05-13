@@ -39,6 +39,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             CopyToOutputDirectory = asset.CopyToOutputDirectory;
             CopyToPublishDirectory = asset.CopyToPublishDirectory;
             OriginalItemSpec = asset.OriginalItemSpec;
+            DeferredFingerprint = asset.DeferredFingerprint;
         }
 
         public string Identity { get; set; }
@@ -78,6 +79,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         public string CopyToPublishDirectory { get; set; }
 
         public string OriginalItemSpec { get; set; }
+
+        public string DeferredFingerprint { get; set; }
 
         public static StaticWebAsset FromTaskItem(ITaskItem item)
         {
@@ -210,16 +213,23 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                 CopyToOutputDirectory = item.GetMetadata(nameof(CopyToOutputDirectory)),
                 CopyToPublishDirectory = item.GetMetadata(nameof(CopyToPublishDirectory)),
                 OriginalItemSpec = item.GetMetadata(nameof(OriginalItemSpec)),
+                DeferredFingerprint = item.GetMetadata(nameof(DeferredFingerprint)),
             };
 
         public void ApplyDefaults()
         {
             CopyToOutputDirectory = string.IsNullOrEmpty(CopyToOutputDirectory) ? AssetCopyOptions.Never : CopyToOutputDirectory;
             CopyToPublishDirectory = string.IsNullOrEmpty(CopyToPublishDirectory) ? AssetCopyOptions.PreserveNewest : CopyToPublishDirectory;
-            (Fingerprint, Integrity) = ComputeFingerprintAndIntegrity();
+            (Fingerprint, Integrity) = DeferredFingerprint == bool.TrueString ? (string.Empty, string.Empty) : ComputeFingerprintAndIntegrity();
             AssetKind = !string.IsNullOrEmpty(AssetKind) ? AssetKind : !ShouldCopyToPublishDirectory() ? AssetKinds.Build : AssetKinds.All;
             AssetMode = string.IsNullOrEmpty(AssetMode) ? AssetModes.All : AssetMode;
             AssetRole = string.IsNullOrEmpty(AssetRole) ? AssetRoles.Primary : AssetRole;
+        }
+
+        public void ResolveFingerprintAndIntegrity()
+        {
+            DeferredFingerprint = string.Empty;
+            (Fingerprint, Integrity) = ComputeFingerprintAndIntegrity();
         }
 
         private (string Fingerprint, string Integrity) ComputeFingerprintAndIntegrity() =>
@@ -299,6 +309,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             result.SetMetadata(nameof(CopyToOutputDirectory), CopyToOutputDirectory);
             result.SetMetadata(nameof(CopyToPublishDirectory), CopyToPublishDirectory);
             result.SetMetadata(nameof(OriginalItemSpec), OriginalItemSpec);
+            result.SetMetadata(nameof(DeferredFingerprint), DeferredFingerprint);
             return result;
         }
 
@@ -380,14 +391,29 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                 throw new InvalidOperationException($"Alternative asset '{Identity}' does not define an asset trait name or value.");
             }
 
-            if (string.IsNullOrEmpty(Fingerprint))
+            if (DeferredFingerprint != bool.TrueString)
             {
-                throw new InvalidOperationException($"Fingerprint for '{Identity}' is not defined.");
-            }
+                if (string.IsNullOrEmpty(Fingerprint))
+                {
+                    throw new InvalidOperationException($"Fingerprint for '{Identity}' is not defined.");
+                }
 
-            if (string.IsNullOrEmpty(Integrity))
+                if (string.IsNullOrEmpty(Integrity))
+                {
+                    throw new InvalidOperationException($"Integrity for '{Identity}' is not defined.");
+                }
+            }
+            else
             {
-                throw new InvalidOperationException($"Integrity for '{Identity}' is not defined.");
+                if (!string.IsNullOrEmpty(Fingerprint))
+                {
+                    throw new InvalidOperationException($"Fingerprint for '{Identity}' is defined but deferred.");
+                }
+
+                if (!string.IsNullOrEmpty(Integrity))
+                {
+                    throw new InvalidOperationException($"Integrity for '{Identity}' is defined but deferred.");
+                }
             }
         }
 
@@ -409,7 +435,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             string integrity,
             string copyToOutputDirectory,
             string copyToPublishDirectory,
-            string originalItemSpec)
+            string originalItemSpec,
+            string deferredFingerprint)
         {
             var result = new StaticWebAsset
             {
@@ -430,7 +457,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                 Integrity = integrity,
                 CopyToOutputDirectory = copyToOutputDirectory,
                 CopyToPublishDirectory = copyToPublishDirectory,
-                OriginalItemSpec = originalItemSpec
+                OriginalItemSpec = originalItemSpec,
+                DeferredFingerprint = deferredFingerprint,
             };
 
             result.ApplyDefaults();
@@ -654,18 +682,27 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
                 return result;
             }
 
-            result = string.Compare(Fingerprint, other.Fingerprint, StringComparison.Ordinal);
+            result = string.Compare(DeferredFingerprint, other.DeferredFingerprint, StringComparison.Ordinal);
             if (result != 0)
             {
                 return result;
             }
 
-            result = string.Compare(Integrity, other.Integrity, StringComparison.Ordinal);
-            if (result != 0)
+            if (DeferredFingerprint != bool.TrueString)
             {
-                return result;
-            }
+                result = string.Compare(Fingerprint, other.Fingerprint, StringComparison.Ordinal);
+                if (result != 0)
+                {
+                    return result;
+                }
 
+                result = string.Compare(Integrity, other.Integrity, StringComparison.Ordinal);
+                if (result != 0)
+                {
+                    return result;
+                }
+            }
+            
             result = string.Compare(CopyToOutputDirectory, other.CopyToOutputDirectory, StringComparison.Ordinal);
             if (result != 0)
             {
@@ -846,7 +883,8 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             $"Integrity: {Integrity}, " +
             $"CopyToOutputDirectory: {CopyToOutputDirectory}, " +
             $"CopyToPublishDirectory: {CopyToPublishDirectory}, " +
-            $"OriginalItemSpec: {OriginalItemSpec}";
+            $"OriginalItemSpec: {OriginalItemSpec}, " +
+            $"DeferredFingerprint: {DeferredFingerprint}";
 
         public override int GetHashCode()
         {
@@ -871,6 +909,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             hash.Add(CopyToOutputDirectory);
             hash.Add(CopyToPublishDirectory);
             hash.Add(OriginalItemSpec);
+            hash.Add(DeferredFingerprint);
             return hash.ToHashCode();
 #else
             int hashCode = 1447485498;
@@ -893,6 +932,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(CopyToOutputDirectory);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(CopyToPublishDirectory);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(OriginalItemSpec);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DeferredFingerprint);
             return hashCode;
 #endif
         }
