@@ -15,7 +15,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ComputeStaticWebAssetsTargetPaths"
     AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
-    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" />
+    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''"
+    PrecomputationMode="Static" />
 
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.GenerateStaticWebAssetsManifest"
@@ -95,7 +96,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ComputeStaticWebAssetsForCurrentProject"
     AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
-    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" />
+    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" 
+    PrecomputationMode="Static"/>
 
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ResolveStaticWebAssetsEmbeddedProjectConfiguration"
@@ -583,7 +585,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="AddStaticWebAssetsManifest" DependsOnTargets="ResolveStaticWebAssetsConfiguration">
     <ItemGroup>
-      <ContentWithTargetPath Condition="'$(GeneratedWebAssetManifests)' == 'true' or Exists('$(StaticWebAssetDevelopmentManifestPath)')"
+      <ContentWithTargetPath Condition="'$(GeneratedWebAssetManifests)' == 'true'"
         Include="$(StaticWebAssetDevelopmentManifestPath)"
         TargetPath="$(TargetName).staticwebassets.runtime.json"
         CopyToOutputDirectory="PreserveNewest"
@@ -593,7 +595,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="AddStaticWebAssetEndpointsBuildManifest" DependsOnTargets="ResolveStaticWebAssetsConfiguration">
     <ItemGroup>
-      <ContentWithTargetPath Condition="'$(GeneratedWebAssetManifests)' == 'true' or Exists('$(StaticWebAssetEndpointsBuildManifestPath)')"
+      <ContentWithTargetPath Condition="'$(GeneratedWebAssetManifests)' == 'true'"
         Include="$(StaticWebAssetEndpointsBuildManifestPath)"
         TargetPath="$(TargetName).staticwebassets.endpoints.json"
         CopyToOutputDirectory="PreserveNewest"
@@ -662,7 +664,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       <GeneratedWebAssetManifests>true</GeneratedWebAssetManifests>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <FileWrites Include="$(StaticWebAssetBuildManifestPath)" />
       <FileWrites Include="$(StaticWebAssetDevelopmentManifestPath)" />
       <FileWrites Include="$(StaticWebAssetEndpointsBuildManifestPath)" />

@@ -100,18 +100,26 @@ Copyright (c) .NET Foundation. All rights reserved.
   -->
   <Target Name="_HandleFileConflictsForPublish"
           AfterTargets="ComputeFilesToPublish"
-          Condition="'$(ErrorOnDuplicatePublishOutputFiles)' != 'false'">
+          Condition="'$(ErrorOnDuplicatePublishOutputFiles)' != 'false'" Deferred="Item:ResolvedFileToPublish:r">
 
-    <CheckForDuplicateItemMetadata
-      Items="@(ResolvedFileToPublish->Distinct())"
+    <ItemGroup>
+      <ResolvedFileToPublishDistinct Deferred="true" Include="@(ResolvedFileToPublish->Distinct())" />
+    </ItemGroup>
+    
+    <CheckForDuplicateItemMetadata PrecomputationMode="Dynamic"
+      Items="@(ResolvedFileToPublishDistinct)"
       MetadataName="RelativePath">
       <Output TaskParameter="DuplicatesExist" PropertyName="_ResolvedFileToPublishContainsDuplicates" />
       <Output TaskParameter="DuplicateItems" ItemName="_ResolvedFileToPublishDuplicatedItems" />
     </CheckForDuplicateItemMetadata>
 
-    <NETSdkError Condition="'$(_ResolvedFileToPublishContainsDuplicates)' == 'true'"
+    <ItemGroup>
+      <_ResolvedFileToPublishDuplicatedItemsJoined Deferred="true" Include="@(_ResolvedFileToPublishDuplicatedItems, ', ')" />
+    </ItemGroup>
+
+    <NETSdkError PrecomputationMode="Dynamic" DeferredCondition="'$(_ResolvedFileToPublishContainsDuplicates)' == 'true'"
                  ResourceName="DuplicatePublishOutputFiles"
-                 FormatArguments="@(_ResolvedFileToPublishDuplicatedItems, ', ')" />
+                 FormatArguments="@(_ResolvedFileToPublishDuplicatedItemsJoined)" />
 
   </Target>
 

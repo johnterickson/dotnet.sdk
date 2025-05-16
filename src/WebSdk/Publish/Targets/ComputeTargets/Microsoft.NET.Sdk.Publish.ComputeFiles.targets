@@ -52,7 +52,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="_IncludePrePublishGeneratedContent" BeforeTargets="GetCopyToPublishDirectoryItems" Condition=" '$(EnableDefaultItems)' == 'true' And '$(EnableDefaultContentItems)' == 'true' ">
     <ItemGroup>
       <!-- First, clean up previously generated content that may have been removed. -->
-      <ContentWithTargetPath Remove="@(ContentWithTargetPath)" Condition="!Exists('%(Identity)')" />
+      <ContentWithTargetPath Remove="@(ContentWithTargetPath)" Condition="'$(IsPrecomputePhase)' != 'true' and !Exists('%(Identity)')" />
       <!-- Next, include any newly generated content. -->
       <_WebProjectGeneratedContent Include="wwwroot\**" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);@(_ContentIncludedByDefault)" />
       <ContentWithTargetPath Include="@(_WebProjectGeneratedContent)" TargetPath="%(Identity)" CopyToPublishDirectory="PreserveNewest" />

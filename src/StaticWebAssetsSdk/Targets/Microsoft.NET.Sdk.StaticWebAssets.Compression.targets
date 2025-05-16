@@ -275,7 +275,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       ToolExe="$(_DotNetHostFileName)"
       ToolPath="$(_DotNetHostDirectory)" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <FileWrites Include="@(_GZipCompressedStaticWebAssets)" />
       <FileWrites Include="@(_BrotliCompressedStaticWebAssets)" />
     </ItemGroup>
@@ -379,7 +379,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       ToolExe="$(_DotNetHostFileName)"
       ToolPath="$(_DotNetHostDirectory)" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <FileWrites Include="@(_GZipCompressedStaticWebAssetsForPublish)" />
       <FileWrites Include="@(_BrotliCompressedStaticWebAssetsForPublish)" />
     </ItemGroup>

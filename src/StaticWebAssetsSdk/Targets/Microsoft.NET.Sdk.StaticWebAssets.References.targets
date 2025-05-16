@@ -13,11 +13,12 @@ Copyright (c) .NET Foundation. All rights reserved.
 <Project ToolsVersion="14.0">
 
   <Target Name="_CleanupReferencedProjectItemGroups" BeforeTargets="GetCopyToPublishDirectoryItems" DependsOnTargets="ResolveStaticWebAssetsConfiguration">
-    <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetBuildManifestPath)">
+    <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetBuildManifestPath)" Condition="'$(GeneratedWebAssetManifests)' != 'true'">
       <Output TaskParameter="Assets" ItemName="_CleanupStaticWebAsset" />
     </ReadStaticWebAssetsManifestFile>
 
     <ItemGroup>
+      <_CleanupStaticWebAsset Include="@(StaticWebAsset)" Condition="'$(GeneratedWebAssetManifests)' == 'true'" />
       <Content Remove="@(_CleanupStaticWebAsset->'%(OriginalItemSpec)')" />
       <ContentWithTargetPath Remove="@(_CleanupStaticWebAsset->'%(OriginalItemSpec)')" />
       <None Remove="@(_CleanupStaticWebAsset->'%(OriginalItemSpec)')" />
@@ -101,7 +102,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       </ItemGroup>
   </Target>
 
-  <Target Name="ResolveReferencedProjectsStaticWebAssets" DependsOnTargets="ResolveReferencedProjectsStaticWebAssetsConfiguration">
+  <Target Name="ResolveReferencedProjectsStaticWebAssets" DependsOnTargets="ResolveReferencedProjectsStaticWebAssetsConfiguration"
+    Deferred="Item:_ResolvedReferencedProjectBuildStaticWebAssetEndpoints:r">
 
       <MSBuild
         Condition="'@(StaticWebAssetProjectConfiguration)' != ''"
@@ -210,17 +212,16 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="GetCurrentProjectPublishStaticWebAssetItems" DependsOnTargets="ResolveStaticWebAssetsConfiguration" Returns="@(_CachedPublishStaticWebAssetItems)">
 
-      <PropertyGroup>
-        <_ShouldReadPublishManifestAndUpdateItemGroup>false</_ShouldReadPublishManifestAndUpdateItemGroup>
-        <_ShouldReadPublishManifestAndUpdateItemGroup Condition="@(_CachedPublishStaticWebAssets) == '' and @(_CachedPublishStaticWebAssetEndpoints) == '' and @(_CachedPublishStaticWebAssetDiscoveryPatterns) == ''">true</_ShouldReadPublishManifestAndUpdateItemGroup>
-      </PropertyGroup>
-
       <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetPublishManifestPath)"
-        Condition="'$(_ShouldReadPublishManifestAndUpdateItemGroup)' == 'true'">
+        Condition="'$(_CachedPublishStaticWebAssets)' != 'true'">
         <Output TaskParameter="Assets" ItemName="_CachedPublishStaticWebAssets" />
         <Output TaskParameter="Endpoints" ItemName="_CachedPublishStaticWebAssetEndpoints" />
         <Output TaskParameter="DiscoveryPatterns" ItemName="_CachedPublishStaticWebAssetDiscoveryPatterns" />
       </ReadStaticWebAssetsManifestFile>
+
+      <PropertyGroup>
+        <_CachedPublishStaticWebAssets>true</_CachedPublishStaticWebAssets>
+      </PropertyGroup>
 
       <ComputeReferenceStaticWebAssetItems
         Assets="@(_CachedPublishStaticWebAssets)"

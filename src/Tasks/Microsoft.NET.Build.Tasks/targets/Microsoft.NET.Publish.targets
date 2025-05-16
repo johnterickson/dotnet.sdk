@@ -262,7 +262,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_IncrementalCleanPublishDirectory"
-          DependsOnTargets="_GetCurrentAndPriorPublishFileWrites">
+          DependsOnTargets="_GetCurrentAndPriorPublishFileWrites" PrecomputationMode="Skip">
 
     <!-- Subtract list of files produced in the prior publish from list of files produced in this publish. -->
     <ItemGroup>
@@ -289,7 +289,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     Get the list of files written in the previous publish and the list of files to be written in this publish.
     ============================================================
     -->
-  <Target Name="_GetCurrentAndPriorPublishFileWrites" >
+  <Target Name="_GetCurrentAndPriorPublishFileWrites" PrecomputationMode="Skip" >
     <PropertyGroup>
       <_NormalizedPublishDir>$([MSBuild]::NormalizeDirectory($(PublishDir)))</_NormalizedPublishDir>
     </PropertyGroup>
@@ -335,6 +335,13 @@ Copyright (c) .NET Foundation. All rights reserved.
     </RemoveDuplicates>
   </Target>
 
+  <Target Name="_CopyResolvedFilesToPublishPreserveNewestOutput" DependsOnTargets="_ComputeResolvedFilesToPublishTypes">
+    <ItemGroup>
+      <_CopyResolvedFilesToPublishPreserveNewestOutputs Include="@(_ResolvedFileToPublishPreserveNewest->'$(PublishDir)%(RelativePath)')" Condition="'$(IsPrecomputePhase)' != 'true'" />
+      <_CopyResolvedFilesToPublishPreserveNewestOutputs Include="$(PublishDir)#dir" Condition="'$(IsPrecomputePhase)' == 'true'" />
+    </ItemGroup>
+  </Target>
+
   <!--
     ============================================================
                                         _CopyResolvedFilesToPublishPreserveNewest
@@ -343,17 +350,25 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_CopyResolvedFilesToPublishPreserveNewest"
-          DependsOnTargets="_ComputeResolvedFilesToPublishTypes"
-          Inputs="@(_ResolvedFileToPublishPreserveNewest)"
-          Outputs="@(_ResolvedFileToPublishPreserveNewest->'$(PublishDir)%(RelativePath)')">
+          PrecomputeMerge="GenerateOutDir"
+          DependsOnTargets="_ComputeResolvedFilesToPublishTypes;_CopyResolvedFilesToPublishPreserveNewestOutput"
+          Inputs="@(_ResolvedFileToPublishPreserveNewestDeps)"
+          Outputs="@(_CopyResolvedFilesToPublishPreserveNewestOutputs)"
+          Deferred="Item:_ResolvedFileToPublishPreserveNewest:r;Property:PublishDir:r">
+
+    <ItemGroup>
+      <_ResolvedFileToPublishPreserveNewestDestination Deferred="true" Include="@(_ResolvedFileToPublishPreserveNewest->'$(PublishDir)%(RelativePath)')" />
+    </ItemGroup>
 
     <!--
       PreserveNewest means that we will only copy the source to the destination if the source is newer.
       SkipUnchangedFiles is not used for that purpose because it will copy if the source and destination
       differ by size too.  Instead, this target uses inputs and outputs to only copy when the source is newer.
       -->
-    <Copy SourceFiles = "@(_ResolvedFileToPublishPreserveNewest)"
-          DestinationFiles="@(_ResolvedFileToPublishPreserveNewest->'$(PublishDir)%(RelativePath)')"
+    <Copy 
+          NoPredict="true"
+          SourceFiles="@(_ResolvedFileToPublishPreserveNewest)"
+          DestinationFiles="@(_ResolvedFileToPublishPreserveNewestDestination)"
           OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
           Retries="$(CopyRetryCount)"
           RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
@@ -374,15 +389,24 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_CopyResolvedFilesToPublishAlways"
-          DependsOnTargets="_ComputeResolvedFilesToPublishTypes">
+          DependsOnTargets="_ComputeResolvedFilesToPublishTypes"
+          PrecomputeMerge="GenerateOutDir"
+          PrecomputeInputs="@(_ResolvedFileToPublishAlwaysDeps)"
+          Deferred="Item:_ResolvedFileToPublishAlways:r;Property:PublishDir:r">
+
+    <ItemGroup>
+      <_ResolvedFileToPublishAlwaysDestination Deferred="true" Include="@(_ResolvedFileToPublishAlways->'$(PublishDir)%(RelativePath)')" />
+    </ItemGroup>
 
     <!--
       Use SkipUnchangedFiles to prevent unnecessary file copies. The copy will occur if the
       destination doesn't exist, the source is newer than the destination, or if the source and
       destination differ by file size.
       -->
-    <Copy SourceFiles = "@(_ResolvedFileToPublishAlways)"
-          DestinationFiles="@(_ResolvedFileToPublishAlways->'$(PublishDir)%(RelativePath)')"
+    <Copy
+          NoPredict="true"
+          SourceFiles="@(_ResolvedFileToPublishAlways)"
+          DestinationFiles="@(_ResolvedFileToPublishAlwaysDestination)"
           SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
           OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
           Retries="$(CopyRetryCount)"
@@ -419,24 +443,33 @@ Copyright (c) .NET Foundation. All rights reserved.
     Then further splits those into 'Unbundled' buckets based on the single file setting.
     ============================================================
     -->
-  <Target Name="_ComputeResolvedFilesToPublishTypes">
+  <Target Name="_ComputeResolvedFilesToPublishTypes" Deferred="Item:ResolvedFileToPublish:r;Property:PublishSingleFile:r">
     <ItemGroup>
 
-      <_ResolvedFileToPublishPreserveNewest Include="@(ResolvedFileToPublish)"
+      <_ResolvedFileToPublishPreserveNewestDeps Include="@(ResolvedFileToPublishDeps)" />
+      <_ResolvedFileToPublishPreserveNewest Deferred="true" Include="@(ResolvedFileToPublish)"
                                             Condition="'%(ResolvedFileToPublish.CopyToPublishDirectory)'=='PreserveNewest'" />
 
-      <_ResolvedFileToPublishAlways Include="@(ResolvedFileToPublish)"
+      <_ResolvedFileToPublishAlwaysDeps Include="@(ResolvedFileToPublishDeps)" />
+      <_ResolvedFileToPublishAlways Deferred="true" Include="@(ResolvedFileToPublish)"
                                     Condition="'%(ResolvedFileToPublish.CopyToPublishDirectory)'=='Always'" />
+      <_ResolvedFileToPublishOther Deferred="true" Include="@(ResolvedFileToPublish)"
+                                    Condition="'%(ResolvedFileToPublish.CopyToPublishDirectory)'!='Always' and '%(ResolvedFileToPublish.CopyToPublishDirectory)'!='PreserveNewest'" />
     </ItemGroup>
+
+    <Error PrecomputationMode="Dynamic" DeferredCondition="@(_ResolvedFileToPublishOther->Count()) > 0"
+          Text="The CopyToPublishDirectory metadata for the following files is not set to PreserveNewest or Always. Please set it to one of those values: @(_ResolvedFileToPublishOther)" /> 
 
     <ItemGroup>
 
       <_ResolvedUnbundledFileToPublishPreserveNewest
+                    Deferred="true"
                     Include="@(_ResolvedFileToPublishPreserveNewest)"
                     Condition="'$(PublishSingleFile)' != 'true' or
                                '%(_ResolvedFileToPublishPreserveNewest.ExcludeFromSingleFile)'=='true'" />
 
       <_ResolvedUnbundledFileToPublishAlways
+              Deferred="true"
               Include="@(_ResolvedFileToPublishAlways)"
               Condition="'$(PublishSingleFile)' != 'true' or
                          '%(_ResolvedFileToPublishAlways.ExcludeFromSingleFile)'=='true'" />
@@ -488,7 +521,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="ComputeResolvedFilesToPublishList"
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
-                            ComputeRefAssembliesToPublish">
+                            ComputeRefAssembliesToPublish"
+          Deferred="Item:_ResolvedCopyLocalPublishAssets:r;Item:_ResolvedCopyLocalPublishAssetsRemoved:w;Item:ResolvedFileToPublishRemoved:w;Property:PublishSingleFile:r">
     <ItemGroup>
       <!-- Copy the build product (.dll or .exe). -->
       <ResolvedFileToPublish Include="@(IntermediateAssembly)"
@@ -537,26 +571,6 @@ Copyright (c) .NET Foundation. All rights reserved.
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
-    </ItemGroup>
-
-    <!-- Remove conflicting items that appear in both _ResolvedCopyLocalPublishAssets and ResolvedFileToPublish
-         to ensure that we don't get duplicate files in the publish output. -->
-    <ResolveOverlappingItemGroupConflicts ItemGroup1="@(_ResolvedCopyLocalPublishAssets->Distinct())"
-                        ItemGroup2="@(ResolvedFileToPublish->Distinct())"
-                        PreferredPackages="$(PackageConflictPreferredPackages)">
-      <Output TaskParameter="RemovedItemGroup1" ItemName="_ResolvedCopyLocalPublishAssetsRemoved" />
-      <Output TaskParameter="RemovedItemGroup2" ItemName="ResolvedFileToPublishRemoved" />
-    </ResolveOverlappingItemGroupConflicts>
-
-    <ItemGroup>
-      <_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssetsRemoved)"/>
-      <ResolvedFileToPublish Remove="@(ResolvedFileToPublishRemoved)"/>
-
-      <!-- Copy the resolved copy local publish assets. -->
-      <ResolvedFileToPublish Include="@(_ResolvedCopyLocalPublishAssets)">
-        <RelativePath>%(_ResolvedCopyLocalPublishAssets.DestinationSubDirectory)%(Filename)%(Extension)</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
 
       <!-- Copy the xml documentation (if enabled) -->
       <ResolvedFileToPublish Include="@(FinalDocFile)"
@@ -570,9 +584,38 @@ Copyright (c) .NET Foundation. All rights reserved.
         <RelativePath>shims/%(_EmbeddedApphostPaths.ShimRuntimeIdentifier)/%(_EmbeddedApphostPaths.Filename)%(_EmbeddedApphostPaths.Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ResolvedCopyLocalPublishAssetsDistinct Deferred="true" Include="@(_ResolvedCopyLocalPublishAssets->Distinct())" />
+    </ItemGroup>
+
+    <!-- Remove conflicting items that appear in both _ResolvedCopyLocalPublishAssets and ResolvedFileToPublish
+         to ensure that we don't get duplicate files in the publish output. -->
+    <ResolveOverlappingItemGroupConflicts ItemGroup1="@(_ResolvedCopyLocalPublishAssetsDistinct)"
+                        ItemGroup2="@(ResolvedFileToPublish->Distinct())"
+                        PreferredPackages="$(PackageConflictPreferredPackages)">
+      <Output TaskParameter="RemovedItemGroup1" ItemName="_ResolvedCopyLocalPublishAssetsRemoved" />
+      <Output TaskParameter="RemovedItemGroup2" ItemName="ResolvedFileToPublishRemoved" />
+    </ResolveOverlappingItemGroupConflicts>
+    
+
+    <ItemGroup>
+      <_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssetsRemoved)"/>
+
+      <ResolvedFileToPublishDeps Include="@(ResolvedFileToPublish->'%(DependencyFile)')" Condition="'%(ResolvedFileToPublish.DependencyFile)' != ''" />
+      <ResolvedFileToPublishDeps Include="@(ResolvedFileToPublish->'%(Identity)')" Condition="'%(ResolvedFileToPublish.DependencyFile)' == ''" />
+      <ResolvedFileToPublish Deferred="true" Remove="@(ResolvedFileToPublishRemoved)"/>
+
+      <!-- Copy the resolved copy local publish assets. -->
+      <ResolvedFileToPublishDeps Include="@(_ResolvedCopyLocalPublishAssetsDeps)" />
+      <ResolvedFileToPublish Include="@(_ResolvedCopyLocalPublishAssets)">
+        <RelativePath>%(_ResolvedCopyLocalPublishAssets.DestinationSubDirectory)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
 
       <!-- Filter files for PublishSingleFiles scenario -->
-      <_FilesToDrop Include="@(ResolvedFileToPublish)"
+      <_FilesToDrop Deferred="true" Default="true" Include="@(ResolvedFileToPublish)"
                     Condition="'$(PublishSingleFile)' == 'true' and
                                '%(ResolvedFileToPublish.DropFromSingleFile)' == 'true'"/>
       <ResolvedFileToPublish Remove="@(_FilesToDrop)"/>
@@ -682,10 +725,12 @@ Copyright (c) .NET Foundation. All rights reserved.
   -->
   <Target Name="_ComputeResolvedCopyLocalPublishAssets"
           DependsOnTargets="_ResolveCopyLocalAssetsForPublish;
-                            _FilterSatelliteResourcesForPublish">
+                            _FilterSatelliteResourcesForPublish"
+          Deferred="Item:_ResolvedCopyLocalPublishAssets:w;Item:ReferenceCopyLocalPaths:r;Item:_ResolvedCopyLocalBuildAssets:r;Item:RuntimePackAsset:r;Property:PublishReferencesDocumentationFiles:r">
 
     <ItemGroup>
-      <_ResolvedCopyLocalPublishAssets Include="@(ReferenceCopyLocalPaths)"
+      <_ResolvedCopyLocalPublishAssetsDeps Include="@(ReferenceCopyLocalPathsDeps)" />
+      <_ResolvedCopyLocalPublishAssets Deferred="true" Include="@(ReferenceCopyLocalPaths)"
                                        Exclude="@(_ResolvedCopyLocalBuildAssets);@(RuntimePackAsset)"
                                        Condition="('$(PublishReferencesDocumentationFiles)' == 'true' or '%(ReferenceCopyLocalPaths.Extension)' != '.xml') and '%(ReferenceCopyLocalPaths.Private)' != 'false'">
         <DestinationSubPath>%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</DestinationSubPath>
@@ -1044,10 +1089,10 @@ Copyright (c) .NET Foundation. All rights reserved.
         Condition="'$(PublishSingleFile)' == 'true'">
 
     <ItemGroup>
-      <_FilesToBundle Include="@(ResolvedFileToPublish)"
+      <_FilesToBundle Deferred="true" Include="@(ResolvedFileToPublish)"
                       Condition="'%(ResolvedFileToPublish.ExcludeFromSingleFile)' != 'true'"/>
 
-      <ResolvedFileToPublish Remove="@(_FilesToBundle)"/>
+      <ResolvedFileToPublish Deferred="true" Remove="@(_FilesToBundle)"/>
     </ItemGroup>
 
     <PropertyGroup>
@@ -1069,7 +1114,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <Target Name="_GenerateSingleFileBundleInputCache">
+  <Target Name="_GenerateSingleFileBundleInputCache" PrecomputationMode="Skip">
     <ItemGroup>
       <_GenerateSingleFileBundlePropertyInputsCacheToHash Include="$(PublishedSingleFilePath)" />
       <_GenerateSingleFileBundlePropertyInputsCacheToHash Include="$(TraceSingleFileBundler)" />
@@ -1142,7 +1187,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   </Target>
 
   <Target Name="_GeneratePublishDependencyFileInputCache"
-          DependsOnTargets="_ComputeIntermediateDepsFilePath">
+          DependsOnTargets="_ComputeIntermediateDepsFilePath" PrecomputationMode="Skip">
     <ItemGroup>
       <_GeneratePublishDependencyFilePropertyInputsCacheToHash Include="$(PublishDepsFilePath)" />
       <_GeneratePublishDependencyFilePropertyInputsCacheToHash Include="$(PublishSingleFile)" />
@@ -1195,8 +1240,9 @@ Copyright (c) .NET Foundation. All rights reserved.
                             _ComputePackageReferencePublish;
                             _GeneratePublishDependencyFileInputCache"
           Condition="'$(GenerateDependencyFile)' == 'true' and '$(_UseBuildDependencyFile)' != 'true' and '$(PublishAot)' != 'true'"
-          Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects);$(_GeneratePublishDependencyFilePropertyInputsCache)"
-          Outputs="$(IntermediateDepsFilePath)">
+          Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects);$(_GeneratePublishDependencyFilePropertyInputsCache);@(ReferenceCopyLocalPathsDeps)"
+          Outputs="$(IntermediateDepsFilePath)"
+          Deferred="Property:IntermediateDepsFilePath:r;Property:ProjectDepsFileName:r">
 
     <PropertyGroup>
       <!-- PublishDepsFilePath is the location where the deps.json resides when published
@@ -1248,8 +1294,10 @@ Copyright (c) .NET Foundation. All rights reserved.
                       IncludeProjectsNotInAssetsFile="$(IncludeProjectsNotInAssetsFileInDepsFile)"/>
 
     <ItemGroup>
+      <ResolvedFileToPublishDeps Include="$(IntermediateDepsFilePath)" />
       <ResolvedFileToPublish Include="$(IntermediateDepsFilePath)">
         <RelativePath>$(ProjectDepsFileName)</RelativePath>
+        <CopyToPublishDirectory>Always</CopyToPublishDirectory>
       </ResolvedFileToPublish>
     </ItemGroup>
 
@@ -1319,17 +1367,16 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask TaskName="Microsoft.NET.Build.Tasks.GetPublishItemsOutputGroupOutputs"
           AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
 
-  <Target Name="PublishItemsOutputGroup" DependsOnTargets="$(PublishItemsOutputGroupDependsOn)" Returns="@(PublishItemsOutputGroupOutputs)">
+  <Target Name="PublishItemsOutputGroup" DependsOnTargets="$(PublishItemsOutputGroupDependsOn)" Returns="@(PublishItemsOutputGroupOutputs)" DeferredReturns="Item:PublishItemsOutputGroupOutputs" Deferred="Property:PublishSingleFile:r;Property:PublishedSingleFilePath:r;Property:PublishedSingleFileName:r">
     <GetPublishItemsOutputGroupOutputs
       ResolvedFileToPublish="@(ResolvedFileToPublish)"
-      PublishDir="$(PublishDir)"
-        >
+      PublishDir="$(PublishDir)">
 
       <Output TaskParameter="PublishItemsOutputGroupOutputs" ItemName="PublishItemsOutputGroupOutputs" />
     </GetPublishItemsOutputGroupOutputs>
 
     <ItemGroup>
-      <PublishItemsOutputGroupOutputs Include="$(PublishedSingleFilePath)"
+      <PublishItemsOutputGroupOutputs Deferred="true" Include="$(PublishedSingleFilePath)"
                                       TargetPath="$(PublishedSingleFileName)"
                                       IsKeyOutput="true"
                                       Condition="'$(PublishSingleFile)' == 'true'"

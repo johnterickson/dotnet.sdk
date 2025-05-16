@@ -76,7 +76,7 @@ Copyright (c) .NET Foundation. All rights reserved.
        to manually import build\Microsoft.AspNetCore.StaticWebAssets.props in their custom props files.
    -->
   <Target Name="GenerateStaticWebAssetsPackFiles" AfterTargets="GenerateStaticWebAssetsManifest"
-    Deferred="Item:_PackStaticWebAssets:w;Item:_PackStaticWebAssetEndpoints:w;Item:_PackStaticWebAssetWithTargetPath:w;Item:_PackStaticWebAssetCandidatesResolved:w">
+    Deferred="Item:_PackStaticWebAssetsResolved:w;Item:_PackStaticWebAssetEndpoints:w;Item:_PackStaticWebAssetWithTargetPath:w;Item:_PackStaticWebAssetCandidatesResolved:w">
 
     <ItemGroup>
 
@@ -100,6 +100,9 @@ Copyright (c) .NET Foundation. All rights reserved.
         <PackagePath>buildTransitive\$(PackageId).props</PackagePath>
       </StaticWebAssetPackageFile>
 
+    </ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
+
       <!-- All files potentially created within this target -->
       <FileWrites Include="$(_GeneratedStaticWebAssetsPropsFile)" />
       <FileWrites Include="$(_GeneratedStaticWebAssetEndpointsPropsFile)" />
@@ -113,10 +116,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup>
       <_PackStaticWebAssetCandidates Include="@(StaticWebAsset)" Exclude="@(_StaticWebAssetExcludedFromPack)" />
     </ItemGroup>
-
-    <ResolveStaticWebAssetFingerprints Assets="@(_PackStaticWebAssetCandidates)">
-      <Output TaskParameter="Assets" ItemName="_PackStaticWebAssetCandidatesResolved" />
-    </ResolveStaticWebAssetFingerprints>
 
 
     <!-- The logic for computing the static web assets to pack, is the same logic that we use to determine what assets we need
@@ -141,7 +140,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     -->
     <ComputeReferenceStaticWebAssetItems
-      Assets="@(_PackStaticWebAssetCandidatesResolved)"
+      PrecomputationMode="Static"
+      Assets="@(_PackStaticWebAssetCandidates)"
       ProjectMode="$(StaticWebAssetProjectMode)"
       AssetKind="Publish"
       Source="$(PackageId)"
@@ -149,11 +149,16 @@ Copyright (c) .NET Foundation. All rights reserved.
     >
       <Output TaskParameter="StaticWebAssets" ItemName="_PackStaticWebAssets" />
     </ComputeReferenceStaticWebAssetItems>
+
+    <ResolveStaticWebAssetFingerprints Assets="@(_PackStaticWebAssets)">
+      <Output TaskParameter="Assets" ItemName="_PackStaticWebAssetsResolved" />
+    </ResolveStaticWebAssetFingerprints>
+    
     <!-- This is similar to what we do when providing assets as reference. We use _PackStaticWebAssets as ComputeEndpointsForReferenceStaticWebAssets
       discards any endpoint that doesn't have a matching asset, which acts as a filter to ensure we only provide the relevant endpoints.
     -->
     <ComputeEndpointsForReferenceStaticWebAssets
-      Assets="@(_PackStaticWebAssets)"
+      Assets="@(_PackStaticWebAssetsResolved)"
       CandidateEndpoints="@(StaticWebAssetEndpoint)"
     >
       <Output TaskParameter="Endpoints" ItemName="_PackStaticWebAssetEndpoints" />
@@ -163,14 +168,14 @@ Copyright (c) .NET Foundation. All rights reserved.
          and that describes the static web assets for the package.
      -->
     <GenerateStaticWebAssetsPropsFile
-      StaticWebAssets="@(_PackStaticWebAssets)"
+      StaticWebAssets="@(_PackStaticWebAssetsResolved)"
       TargetPropsFilePath="$(_GeneratedStaticWebAssetsPropsFile)" />
 
     <!-- Generates a props file that goes in build\Microsoft.AspNetCore.StaticWebAssetEndpoints.props
         that describes the static web asset endpoints associated with the assets in the package.
     -->
     <GenerateStaticWebAssetEndpointsPropsFile
-      StaticWebAssets="@(_PackStaticWebAssets)"
+      StaticWebAssets="@(_PackStaticWebAssetsResolved)"
       StaticWebAssetEndpoints="@(_PackStaticWebAssetEndpoints)"
       TargetPropsFilePath="$(_GeneratedStaticWebAssetEndpointsPropsFile)" />
 
@@ -198,7 +203,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <!-- We need to adjust the path for files without extension (LICENSE) for example. Otherwise, when they get packed, nuget creates an
          additional folder for the file. -->
-    <ComputeStaticWebAssetsTargetPaths Assets="@(_PackStaticWebAssets)" PathPrefix="staticwebassets" AdjustPathsForPack="true">
+    <ComputeStaticWebAssetsTargetPaths PrecomputationMode="Dynamic" Assets="@(_PackStaticWebAssetsResolved)" PathPrefix="staticwebassets" AdjustPathsForPack="true">
       <Output TaskParameter="AssetsWithTargetPath" ItemName="_PackStaticWebAssetWithTargetPath" />
     </ComputeStaticWebAssetsTargetPaths>
 

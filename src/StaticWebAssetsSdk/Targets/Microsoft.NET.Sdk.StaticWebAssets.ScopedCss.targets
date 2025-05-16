@@ -179,7 +179,7 @@ Integration with static web assets:
   <MakeDir Directories="$(_ScopedCssIntermediatePath)" />
   <RewriteCss FilesToTransform="@(_ScopedCss)" />
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
     <FileWrites Include="%(_ScopedCss.OutputFile)" />
   </ItemGroup>
 </Target>
@@ -467,7 +467,7 @@ Integration with static web assets:
     OutputFile="$(_ScopedCssProjectOutputPath)"
     PrecomputeOutputs="$(_ScopedCssProjectOutputPath)" />
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
     <FileWrites Include="$(_ScopedCssOutputPath)" />
     <FileWrites Condition="'@(_ScopedCss)' != ''" Include="$(_ScopedCssProjectOutputPath)" />
   </ItemGroup>

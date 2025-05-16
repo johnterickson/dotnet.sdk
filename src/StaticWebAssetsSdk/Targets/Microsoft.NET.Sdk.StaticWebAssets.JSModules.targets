@@ -340,7 +340,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_ExistingPublishJSModulesWithoutFingerprint" />
     </FilterStaticWebAssetEndpoints>
 
-    <FilterStaticWebAssetEndpoints Condition="'$(StaticWebAssetStandaloneHosting)' != 'true' and '@(_ExistingPublishJSModulesWithoutFingerprint)' != ''"
+    <FilterStaticWebAssetEndpoints Condition="'$(StaticWebAssetStandaloneHosting)' != 'true'"
+      DeferredCondition="'@(_ExistingPublishJSModulesWithoutFingerprint)' != ''"
       Endpoints="@(StaticWebAssetEndpoint)"
       Assets="@(_ExistingPublishJSModulesWithoutFingerprint)"
       Filters="@(_JsModulePublishManifestFiltersNoFingerprint)"
@@ -349,8 +350,13 @@ Copyright (c) .NET Foundation. All rights reserved.
       <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_PublishJSModulessWithoutEndpoints" />
     </FilterStaticWebAssetEndpoints>
 
-    <Error Condition="'@(_ExistingPublishJSModules)' != '' and '@(_PublishJSModulessWithoutEndpoints)' != ''"
-      Text="The following scoped css bundles do not have matching endpoints: @(_PublishJSModulessWithoutEndpoints->'%(RelativePath)')" />
+    <ItemGroup>
+      <_PublishJSModulessWithoutEndpointsRelative Deferred="true" Include="@(_PublishJSModulessWithoutEndpoints->'%(RelativePath)')" />
+    </ItemGroup>
+
+    <Error PrecomputationMode="Dynamic" Condition="'@(_ExistingPublishJSModules)' != ''"
+      DeferredCondition="'@(_PublishJSModulessWithoutEndpoints)' != ''"
+      Text="The following scoped css bundles do not have matching endpoints: @(_PublishJSModulessWithoutEndpointsRelative)" />
 
     <ResolveStaticWebAssetEndpointRoutes
       Condition="'@(_ExistingPublishJSModules)' != ''"
@@ -365,7 +371,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       OutputFile="@(_JsModulePublishManifestCandidate)"
       JsModules="@(_ResolvedJSPublishModuleEndpoints)" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <FileWrites Condition="@(_ExistingPublishJSModules) != ''" Include="@(_JsModulePublishManifestCandidate)" />
     </ItemGroup>
 
@@ -373,6 +379,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="ResolveJSModuleManifestPublishStaticWebAssets" DependsOnTargets="$(ResolveJSModuleManifestPublishStaticWebAssetsDependsOn)"
     Condition="'$(GenerateJSModuleManifest)' == 'true'"
+    Deferred="Item:_PublishJsModuleManifestStaticWebAssetResolved:w"
   >
 
     <DefineStaticWebAssets Condition="@(_ExistingPublishJSModules) != ''"
@@ -392,8 +399,12 @@ Copyright (c) .NET Foundation. All rights reserved.
       <Output TaskParameter="Assets" ItemName="_PublishJsModuleManifestStaticWebAsset" />
     </DefineStaticWebAssets>
 
+    <ResolveStaticWebAssetFingerprints Assets="@(_PublishJsModuleManifestStaticWebAsset)">
+      <Output TaskParameter="Assets" ItemName="_PublishJsModuleManifestStaticWebAssetResolved" />
+    </ResolveStaticWebAssetFingerprints>
+
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(_PublishJsModuleManifestStaticWebAsset)"
+      CandidateAssets="@(_PublishJsModuleManifestStaticWebAssetResolved)"
       ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)"
     >
