@@ -633,6 +633,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ResolveStaticWebAssetFingerprints>
 
     <GenerateStaticWebAssetsManifest
+      Condition="@(StaticWebAsset->Count()) > 0"
       Source="$(PackageId)"
       BasePath="$(StaticWebAssetBasePath)"
       Mode="$(StaticWebAssetProjectMode)"
@@ -646,6 +647,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </GenerateStaticWebAssetsManifest>
 
     <GenerateStaticWebAssetEndpointsManifest
+      Condition="@(StaticWebAsset->Count()) > 0"
       Source="$(PackageId)"
       ManifestType="Build"
       Assets="@(_StaticWebAssetManifestResolved)"
@@ -654,6 +656,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </GenerateStaticWebAssetEndpointsManifest>
 
     <GenerateStaticWebAssetsDevelopmentManifest
+      Condition="@(StaticWebAsset->Count()) > 0"
       DiscoveryPatterns="@(StaticWebAssetDiscoveryPattern)"
       Assets="@(_StaticWebAssetManifestResolved)"
       Source="$(PackageId)"

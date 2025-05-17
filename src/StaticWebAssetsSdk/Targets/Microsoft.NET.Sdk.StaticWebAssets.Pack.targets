@@ -168,6 +168,7 @@ Copyright (c) .NET Foundation. All rights reserved.
          and that describes the static web assets for the package.
      -->
     <GenerateStaticWebAssetsPropsFile
+      Condition="@(_PackStaticWebAssets->Count()) > 0"
       StaticWebAssets="@(_PackStaticWebAssetsResolved)"
       TargetPropsFilePath="$(_GeneratedStaticWebAssetsPropsFile)" />
 
@@ -175,6 +176,7 @@ Copyright (c) .NET Foundation. All rights reserved.
         that describes the static web asset endpoints associated with the assets in the package.
     -->
     <GenerateStaticWebAssetEndpointsPropsFile
+      Condition="@(_PackStaticWebAssets->Count()) > 0"
       StaticWebAssets="@(_PackStaticWebAssetsResolved)"
       StaticWebAssetEndpoints="@(_PackStaticWebAssetEndpoints)"
       TargetPropsFilePath="$(_GeneratedStaticWebAssetEndpointsPropsFile)" />
@@ -216,6 +218,7 @@ Copyright (c) .NET Foundation. All rights reserved.
          paths.
      -->
     <StaticWebAssetsGeneratePackManifest
+      Condition="@(_PackStaticWebAssets->Count()) > 0"
       Assets="@(_PackStaticWebAssetWithTargetPath)"
       AdditionalPackageFiles="@(StaticWebAssetPackageFile)"
       ManifestPath="$(StaticWebAssetPackManifestPath)">
