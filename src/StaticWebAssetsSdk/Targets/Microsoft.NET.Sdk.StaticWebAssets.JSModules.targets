@@ -89,7 +89,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   </PropertyGroup>
 
   <Target Name="ResolveJsInitializerModuleStaticWebAssets"
-    Deferred="Item:StaticWebAssetResolved:w;Item:StaticWebAssetEndpoint:w;Item:_JSModuleStaticWebAssetResolved:w;Item:_JSModuleStaticWebAssetEndpoint:w;Item:_FilteredJSModuleStaticWebAssetEndpoint:w;Item:_MissingJSModuleStaticWebAsset:w;Item:_FilteredJSModuleStaticWebAssetEndpointWithProperty:w">
+    Deferred="Item:StaticWebAssetEndpoint:w;Item:_JSModuleStaticWebAssetResolved:w;Item:_JSModuleStaticWebAssetEndpoint:w;Item:_FilteredJSModuleStaticWebAssetEndpoint:w;Item:_MissingJSModuleStaticWebAsset:w;Item:_FilteredJSModuleStaticWebAssetEndpointWithProperty:w">
 
     <ItemGroup>
       <_JSModuleCandidates Include="@(StaticWebAsset)" Condition="'%(SourceType)' == 'Discovered'" />
@@ -163,7 +163,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup>
       <StaticWebAsset Remove="@(_JSModuleStaticWebAsset)" />
       <StaticWebAsset Include="@(_JSModuleStaticWebAsset)" />
-      <StaticWebAssetResolved Deferred="true" Include="@(_JSModuleStaticWebAssetResolved)" />
       <StaticWebAssetEndpoint Deferred="true" Remove="@(_FilteredJSModuleStaticWebAssetEndpointWithProperty)" />
       <StaticWebAssetEndpoint Deferred="true" Include="@(_FilteredJSModuleStaticWebAssetEndpointWithProperty)" />
     </ItemGroup>
