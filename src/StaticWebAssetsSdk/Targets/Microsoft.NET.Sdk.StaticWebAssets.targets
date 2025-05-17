@@ -611,7 +611,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="GenerateComputedBuildStaticWebAssets" DependsOnTargets="$(GenerateComputedBuildStaticWebAssetsDependsOn)" />
 
   <Target Name="GenerateStaticWebAssetsManifest" DependsOnTargets="$(GenerateStaticWebAssetsManifestDependsOn)"
-    Deferred="Item:_StaticWebAssetManifestResolved:w">
+    Deferred="Item:StaticWebAssetResolved:w">
 
     <MergeStaticWebAssets Condition="'@(StaticWebAssetsEmbeddedConfiguration)' != ''"
       CandidateAssets="@(StaticWebAsset)"
@@ -629,7 +629,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
 
     <ResolveStaticWebAssetFingerprints Assets="@(StaticWebAsset)">
-      <Output TaskParameter="Assets" ItemName="_StaticWebAssetManifestResolved" />
+      <Output TaskParameter="Assets" ItemName="StaticWebAssetResolved" />
     </ResolveStaticWebAssetFingerprints>
 
     <GenerateStaticWebAssetsManifest
@@ -640,7 +640,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       ManifestType="Build"
       ReferencedProjectsConfigurations="@(StaticWebAssetProjectConfiguration)"
       DiscoveryPatterns="@(StaticWebAssetDiscoveryPattern)"
-      Assets="@(_StaticWebAssetManifestResolved)"
+      Assets="@(StaticWebAssetResolved)"
       PrecomputeInputs="@(StaticWebAsset)"
       Endpoints="@(StaticWebAssetEndpoint)"
       ManifestPath="$(StaticWebAssetBuildManifestPath)">
@@ -650,7 +650,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       Condition="@(StaticWebAsset->Count()) > 0"
       Source="$(PackageId)"
       ManifestType="Build"
-      Assets="@(_StaticWebAssetManifestResolved)"
+      Assets="@(StaticWebAssetResolved)"
       Endpoints="@(StaticWebAssetEndpoint)"
       ManifestPath="$(StaticWebAssetEndpointsBuildManifestPath)">
     </GenerateStaticWebAssetEndpointsManifest>
@@ -658,7 +658,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <GenerateStaticWebAssetsDevelopmentManifest
       Condition="@(StaticWebAsset->Count()) > 0"
       DiscoveryPatterns="@(StaticWebAssetDiscoveryPattern)"
-      Assets="@(_StaticWebAssetManifestResolved)"
+      Assets="@(StaticWebAssetResolved)"
       Source="$(PackageId)"
       ManifestPath="$(StaticWebAssetDevelopmentManifestPath)">
     </GenerateStaticWebAssetsDevelopmentManifest>
@@ -687,7 +687,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     Condition="'$(NoBuild)' != 'true'"
     BeforeTargets="AssignTargetPaths"
     DependsOnTargets="ResolveStaticWebAssetsConfiguration;UpdateExistingPackageStaticWebAssets"
-    Deferred="Item:StaticWebAssetResolved:w;Item:StaticWebAssetEndpoint:w">
+    Deferred="Item:_StaticWebAssetResolved:w;Item:StaticWebAssetEndpoint:w">
 
     <DefineStaticWebAssets
       CandidateAssets="@(Content)"
@@ -704,11 +704,11 @@ Copyright (c) .NET Foundation. All rights reserved.
     </DefineStaticWebAssets>
 
     <ResolveStaticWebAssetFingerprints Assets="@(StaticWebAsset)">
-      <Output TaskParameter="Assets" ItemName="StaticWebAssetResolved" />
+      <Output TaskParameter="Assets" ItemName="_StaticWebAssetResolved" />
     </ResolveStaticWebAssetFingerprints>
 
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(StaticWebAssetResolved)"
+      CandidateAssets="@(_StaticWebAssetResolved)"
       ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)"
     >
