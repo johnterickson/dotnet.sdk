@@ -1377,7 +1377,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="PublishItemsOutputGroup" DependsOnTargets="$(PublishItemsOutputGroupDependsOn)" Returns="@(PublishItemsOutputGroupOutputs)" DeferredReturns="Item:PublishItemsOutputGroupOutputs" Deferred="Property:PublishSingleFile:r;Property:PublishedSingleFilePath:r;Property:PublishedSingleFileName:r">
     <GetPublishItemsOutputGroupOutputs
       ResolvedFileToPublish="@(ResolvedFileToPublish)"
-      PublishDir="$(PublishDir)">
+      PublishDir="$(PublishDir)"
+      PrecomputationMode="Dynamic">
 
       <Output TaskParameter="PublishItemsOutputGroupOutputs" ItemName="PublishItemsOutputGroupOutputs" />
     </GetPublishItemsOutputGroupOutputs>
