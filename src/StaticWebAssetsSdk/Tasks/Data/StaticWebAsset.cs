@@ -232,6 +232,12 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             (Fingerprint, Integrity) = ComputeFingerprintAndIntegrity();
         }
 
+        public void ResolveFingerprintAndIntegrity(string fingerprint, string integrity)
+        {
+            DeferredFingerprint = string.Empty;
+            (Fingerprint, Integrity) = (fingerprint, integrity);
+        }
+
         private (string Fingerprint, string Integrity) ComputeFingerprintAndIntegrity() =>
             (Fingerprint, Integrity) switch
             {

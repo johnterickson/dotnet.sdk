@@ -103,7 +103,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   </Target>
 
   <Target Name="ResolveReferencedProjectsStaticWebAssets" DependsOnTargets="ResolveReferencedProjectsStaticWebAssetsConfiguration"
-    Deferred="Item:_ResolvedReferencedProjectBuildStaticWebAssetEndpoints:r">
+    Deferred="Item:_ResolvedReferencedProjectBuildStaticWebAssetEndpoints:r;Item:_StaticWebAssetEndpointCanonicalMetadata:r;Item:_StaticWebAssetCanonicalMetadata:r">
 
       <MSBuild
         Condition="'@(StaticWebAssetProjectConfiguration)' != ''"
@@ -118,19 +118,44 @@ Copyright (c) .NET Foundation. All rights reserved.
         <Output TaskParameter="TargetOutputs" ItemName="_ReferencedProjectBuildStaticWebAssetsItems" />
       </MSBuild>
 
-      <ItemGroup>
-        <_ResolvedReferencedProjectBuildStaticWebAssetCandidates
+      <MSBuild
+        Condition="'@(StaticWebAssetProjectConfiguration)' != ''"
+        Targets="%(StaticWebAssetProjectConfiguration.GetBuildAssetsTargets)Deferred"
+        Properties="%(StaticWebAssetProjectConfiguration.AdditionalBuildProperties)"
+        RemoveProperties="%(StaticWebAssetProjectConfiguration.AdditionalBuildPropertiesToRemove);$(_GlobalPropertiesToRemoveFromProjectReferences)"
+        Projects="@(StaticWebAssetProjectConfiguration)"
+        BuildInParallel="$(BuildInParallel)"
+        ContinueOnError="!$(BuildingProject)"
+        SkipNonexistentTargets="false"
+      >
+        <Output TaskParameter="TargetOutputs" ItemName="_ReferencedProjectBuildStaticWebAssetsItemsDeferred" />
+      </MSBuild>
+
+      <ItemGroup Condition="'@(StaticWebAssetProjectConfiguration)' != ''">
+        <_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints
           Include="@(_ReferencedProjectBuildStaticWebAssetsItems)"
           Condition="'%(_ReferencedProjectBuildStaticWebAssetsItems.ResultType)' == 'StaticWebAsset'"
           KeepMetadata="@(_StaticWebAssetCanonicalMetadata)" />
 
-        <_ReferencedProjectBuildStaticWebAssetEndpointsUpdateCandidates
-          Include="@(_ReferencedProjectBuildStaticWebAssetsItems)"
-          Condition="'%(_ReferencedProjectBuildStaticWebAssetsItems.ResultType)' == 'StaticWebAssetEndpoint'"
+        <_ResolvedReferencedProjectBuildStaticWebAssetCandidatesResolved Deferred="true"
+          Include="@(_ReferencedProjectBuildStaticWebAssetsItemsDeferred)"
+          Condition="'%(_ReferencedProjectBuildStaticWebAssetsItemsDeferred.ResultType)' == 'StaticWebAssetResolved'"
+          KeepMetadata="@(_StaticWebAssetCanonicalMetadata)" />
+
+        <_ReferencedProjectBuildStaticWebAssetEndpointsUpdateCandidates Deferred="true"
+          Include="@(_ReferencedProjectBuildStaticWebAssetsItemsDeferred)"
+          Condition="'%(_ReferencedProjectBuildStaticWebAssetsItemsDeferred.ResultType)' == 'StaticWebAssetEndpoint'"
           KeepMetadata="@(_StaticWebAssetEndpointCanonicalMetadata)" />
       </ItemGroup>
 
-      <UpdateExternallyDefinedStaticWebAssets Condition="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidates) != ''"
+      <ResolveStaticWebAssetFingerprintsUsingResolved
+        Condition="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints) != ''"
+        Assets="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints)"
+        ResolvedAssets="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesResolved)">
+        <Output TaskParameter="Assets" ItemName="_ResolvedReferencedProjectBuildStaticWebAssetCandidates" />
+      </ResolveStaticWebAssetFingerprintsUsingResolved>
+
+      <UpdateExternallyDefinedStaticWebAssets Condition="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints) != ''"
         Assets="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidates)"
         Endpoints="@(_ReferencedProjectBuildStaticWebAssetEndpointsUpdateCandidates)"
         FingerprintInferenceExpressions="@(StaticWebAssetFingerprintInferenceExpression)"
@@ -140,7 +165,10 @@ Copyright (c) .NET Foundation. All rights reserved.
         <Output TaskParameter="AssetsWithoutEndpoints" ItemName="_ReferencedProjectBuildStaticWebAssetsWithoutEndpoints" />
       </UpdateExternallyDefinedStaticWebAssets>
 
-      <DefineStaticWebAssetEndpoints Condition="'@(_ReferencedProjectBuildStaticWebAssetsWithoutEndpoints)' != ''"
+      <DefineStaticWebAssetEndpoints 
+        Condition="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints) != ''"
+        DeferredCondition="'@(_ReferencedProjectBuildStaticWebAssetsWithoutEndpoints)' != ''"
+        PrecomputeInputs="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints)"
         CandidateAssets="@(_ReferencedProjectBuildStaticWebAssetsWithoutEndpoints)"
         ExistingEndpoints=""
         ContentTypeMappings="@(StaticWebAssetContentTypeMapping)"
@@ -148,11 +176,11 @@ Copyright (c) .NET Foundation. All rights reserved.
         <Output TaskParameter="Endpoints" ItemName="_ResolvedReferencedProjectBuildStaticWebAssetEndpoints" />
       </DefineStaticWebAssetEndpoints>
 
-      <ItemGroup>
+      <ItemGroup Condition="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints->Count()) != 0">
 
-        <StaticWebAsset Include="@(_ResolvedReferencedProjectBuildStaticWebAssets)" />
-
-        <StaticWebAssetEndpoint Include="@(_ResolvedReferencedProjectBuildStaticWebAssetEndpoints)" />
+        <StaticWebAsset Include="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesNoFingerprints)" />
+        <StaticWebAssetFingerprints Deferred="true" Include="@(_ResolvedReferencedProjectBuildStaticWebAssetCandidatesResolved)" />
+        <StaticWebAssetEndpoint Deferred="true" Include="@(_ResolvedReferencedProjectBuildStaticWebAssetEndpoints)" />
 
         <StaticWebAssetDiscoveryPattern
           Include="@(_ReferencedProjectBuildStaticWebAssetsItems)"
@@ -163,21 +191,32 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </Target>
 
-  <Target Name="GetCurrentProjectBuildStaticWebAssetItems" DependsOnTargets="ResolveStaticWebAssetsConfiguration" Returns="@(_CachedBuildStaticWebAssetItems)">
 
-      <PropertyGroup>
-        <_ShouldReadBuildManifestAndUpdateItemGroup>false</_ShouldReadBuildManifestAndUpdateItemGroup>
-        <_ShouldReadBuildManifestAndUpdateItemGroup Condition="@(_CachedBuildStaticWebAssets) == '' and @(_CachedBuildStaticWebAssetEndpoints) == '' and @(_CachedBuildStaticWebAssetDiscoveryPatterns) == '' and @(_CachedBuildStaticWebAssetReferencedProjectsConfiguration) == ''">true</_ShouldReadBuildManifestAndUpdateItemGroup>
-      </PropertyGroup>
+  <Target Name="LoadCurrentProjectBuildStaticWebAssetItemsFromDisk" Condition="'$(GeneratedWebAssetManifests)' != 'true'">
+    <Error Condition="'$(IsPrecomputeMode)' == 'true'" Text="The target 'LoadCurrentProjectBuildStaticWebAssetItemsFromDisk' cannot be used in precompute mode." />
+    <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetBuildManifestPath)">
+      <Output TaskParameter="Assets" ItemName="_CachedBuildStaticWebAssets" />
+      <Output TaskParameter="Endpoints" ItemName="_CachedBuildStaticWebAssetEndpoints" />
+      <Output TaskParameter="DiscoveryPatterns" ItemName="_CachedBuildStaticWebAssetDiscoveryPatterns" />
+    </ReadStaticWebAssetsManifestFile>
+    <ItemGroup>
+      <_CachedBuildStaticWebAssetsResolved Include="@(_CachedBuildStaticWebAssets)" />
+    </ItemGroup>
+  </Target>
 
-      <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetBuildManifestPath)"
-        Condition="'$(_ShouldReadBuildManifestAndUpdateItemGroup)' == 'true'">
-        <Output TaskParameter="Assets" ItemName="_CachedBuildStaticWebAssets" />
-        <Output TaskParameter="Endpoints" ItemName="_CachedBuildStaticWebAssetEndpoints" />
-        <Output TaskParameter="DiscoveryPatterns" ItemName="_CachedBuildStaticWebAssetDiscoveryPatterns" />
-        <Output TaskParameter="ReferencedProjectsConfiguration" ItemName="_CachedBuildStaticWebAssetReferencedProjectsConfiguration" />
-      </ReadStaticWebAssetsManifestFile>
+  <Target Name="LoadCurrentProjectBuildStaticWebAssetItemsFromMemory" Condition="'$(GeneratedWebAssetManifests)' == 'true'"
+    Deferred="Item:StaticWebAssetResolved:r;Item:StaticWebAssetEndpoint:r">
+    <ItemGroup>
+      <_CachedBuildStaticWebAssets Include="@(StaticWebAsset)" />
+      <_CachedBuildStaticWebAssetsResolved Deferred="true" Include="@(StaticWebAssetResolved)" />
+      <_CachedBuildStaticWebAssetEndpoints Deferred="true" Include="@(StaticWebAssetEndpoint)" />
+      <_CachedBuildStaticWebAssetDiscoveryPatterns Include="@(StaticWebAssetDiscoveryPattern)" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="LoadCurrentProjectBuildStaticWebAssetItems" DependsOnTargets="ResolveStaticWebAssetsConfiguration;LoadCurrentProjectBuildStaticWebAssetItemsFromDisk;LoadCurrentProjectBuildStaticWebAssetItemsFromMemory" />
 
+  <Target Name="LoadCurrentProjectBuildStaticWebAssetItemsForReference" DependsOnTargets="ResolveStaticWebAssetsConfiguration;LoadCurrentProjectBuildStaticWebAssetItems">
       <ComputeReferenceStaticWebAssetItems
         Assets="@(_CachedBuildStaticWebAssets)"
         Patterns="@(_CachedBuildStaticWebAssetDiscoveryPatterns)"
@@ -190,12 +229,14 @@ Copyright (c) .NET Foundation. All rights reserved.
       </ComputeReferenceStaticWebAssetItems>
 
       <ComputeEndpointsForReferenceStaticWebAssets
-        Assets="@(_CachedBuildReferencedStaticWebAsset)"
+        Assets="@(_CachedBuildStaticWebAssetsResolved)"
         CandidateEndpoints="@(_CachedBuildStaticWebAssetEndpoints)"
       >
         <Output TaskParameter="Endpoints" ItemName="_CachedBuildReferencedStaticWebAssetEndpoints" />
       </ComputeEndpointsForReferenceStaticWebAssets>
+  </Target>
 
+  <Target Name="GetCurrentProjectBuildStaticWebAssetItems" DependsOnTargets="LoadCurrentProjectBuildStaticWebAssetItemsForReference" Returns="@(_CachedBuildStaticWebAssetItems)">
       <ItemGroup>
         <_CachedBuildStaticWebassetItems Include="@(_CachedBuildReferencedStaticWebAsset)">
           <ResultType>StaticWebAsset</ResultType>
@@ -203,51 +244,19 @@ Copyright (c) .NET Foundation. All rights reserved.
         <_CachedBuildStaticWebassetItems Include="@(_CachedBuildReferencedStaticWebAssetDiscoveryPatterns)">
           <ResultType>StaticWebAssetDiscoveryPattern</ResultType>
         </_CachedBuildStaticWebassetItems>
-        <_CachedBuildStaticWebassetItems Include="@(_CachedBuildReferencedStaticWebAssetEndpoints)">
-          <ResultType>StaticWebAssetEndpoint</ResultType>
-        </_CachedBuildStaticWebassetItems>
       </ItemGroup>
-
   </Target>
 
-  <Target Name="GetCurrentProjectPublishStaticWebAssetItems" DependsOnTargets="ResolveStaticWebAssetsConfiguration" Returns="@(_CachedPublishStaticWebAssetItems)">
-
-      <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetPublishManifestPath)"
-        Condition="'$(_CachedPublishStaticWebAssets)' != 'true'">
-        <Output TaskParameter="Assets" ItemName="_CachedPublishStaticWebAssets" />
-        <Output TaskParameter="Endpoints" ItemName="_CachedPublishStaticWebAssetEndpoints" />
-        <Output TaskParameter="DiscoveryPatterns" ItemName="_CachedPublishStaticWebAssetDiscoveryPatterns" />
-      </ReadStaticWebAssetsManifestFile>
-
-      <PropertyGroup>
-        <_CachedPublishStaticWebAssets>true</_CachedPublishStaticWebAssets>
-      </PropertyGroup>
-
-      <ComputeReferenceStaticWebAssetItems
-        Assets="@(_CachedPublishStaticWebAssets)"
-        ProjectMode="$(StaticWebAssetProjectMode)"
-        AssetKind="Publish"
-        Source="$(PackageId)"
-      >
-        <Output TaskParameter="StaticWebAssets" ItemName="_CachedPublishReferencedStaticWebAsset" />
-      </ComputeReferenceStaticWebAssetItems>
-
-      <ComputeEndpointsForReferenceStaticWebAssets
-        Assets="@(_CachedPublishStaticWebAssets)"
-        CandidateEndpoints="@(_CachedPublishStaticWebAssetEndpoints)"
-      >
-        <Output TaskParameter="Endpoints" ItemName="_CachedPublishReferencedStaticWebAssetEndpoints" />
-      </ComputeEndpointsForReferenceStaticWebAssets>
-
+  <Target Name="GetCurrentProjectBuildStaticWebAssetItemsDeferred" DependsOnTargets="LoadCurrentProjectBuildStaticWebAssetItemsForReference" Returns="@(_CachedBuildStaticWebAssetItemsDeferred)" DeferredReturns="Item:_CachedBuildStaticWebAssetItemsDeferred"
+    Deferred="Item:_CachedBuildStaticWebAssetsResolved:r;Item:_CachedBuildReferencedStaticWebAssetEndpoints:r">
       <ItemGroup>
-        <_CachedPublishStaticWebassetItems Include="@(_CachedPublishReferencedStaticWebAsset)">
-          <ResultType>StaticWebAsset</ResultType>
-        </_CachedPublishStaticWebassetItems>
-        <_CachedPublishStaticWebassetItems Include="@(_CachedPublishReferencedStaticWebAssetEndpoints)">
-          <ResultType>StaticWebAssetEndpoint</ResultType>
-        </_CachedPublishStaticWebassetItems>
+        <_CachedBuildStaticWebAssetItemsDeferred Deferred="true" Include="@(_CachedBuildStaticWebAssetsResolved)">
+          <ResultType>StaticWebAssetResolved</ResultType>
+        </_CachedBuildStaticWebAssetItemsDeferred>
+        <_CachedBuildStaticWebAssetItemsDeferred Deferred="true" Include="@(_CachedBuildReferencedStaticWebAssetEndpoints)">
+          <ResultType>StaticWebAssetEndpoints</ResultType>
+        </_CachedBuildStaticWebAssetItemsDeferred>
       </ItemGroup>
-
   </Target>
 
 </Project>

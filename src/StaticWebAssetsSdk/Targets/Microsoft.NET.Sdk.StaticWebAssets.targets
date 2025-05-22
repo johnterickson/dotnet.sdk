@@ -72,6 +72,12 @@ Copyright (c) .NET Foundation. All rights reserved.
     Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" />
 
   <UsingTask
+    TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ResolveStaticWebAssetFingerprintsUsingResolved"
+    AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
+    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''"
+    PrecomputationMode="Dynamic" />
+
+  <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.CollectStaticWebAssetsToCopy"
     AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
     Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''"
@@ -91,7 +97,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ComputeReferenceStaticWebAssetItems"
     AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
-    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" />
+    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''"
+    PrecomputationMode="Static" />
 
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ComputeStaticWebAssetsForCurrentProject"
@@ -102,7 +109,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ResolveStaticWebAssetsEmbeddedProjectConfiguration"
     AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
-    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" />
+    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''"
+    PrecomputationMode="Static" />
 
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.MergeStaticWebAssets"
@@ -135,7 +143,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask
     TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.UpdateExternallyDefinedStaticWebAssets"
     AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)"
-    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" />
+    Condition="'$(StaticWebAssetsSdkBuildTasksAssembly)' != ''" 
+    PrecomputationMode="Dynamic" />
 
   <!-- Static web assets define how web content needs to be served from web applications, class libraries and packages during
        development and what and where web contents need to be served on the published application.
