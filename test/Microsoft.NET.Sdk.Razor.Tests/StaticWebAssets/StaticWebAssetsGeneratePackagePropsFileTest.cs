@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Moq;
 
 namespace Microsoft.AspNetCore.Razor.Tasks
@@ -26,7 +27,7 @@ namespace Microsoft.AspNetCore.Razor.Tasks
                 {
                     BuildEngine = buildEngine.Object,
                     PropsFileImport = "Microsoft.AspNetCore.StaticWebAssets.props",
-                    BuildTargetPath = file
+                    BuildTargetPath = new TaskItem(file)
                 };
 
                 // Act

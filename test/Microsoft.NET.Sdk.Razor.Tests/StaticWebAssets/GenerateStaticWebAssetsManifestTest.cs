@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.StaticWebAssets.Tasks;
 using Moq;
 
@@ -40,7 +41,7 @@ namespace Microsoft.NET.Sdk.Razor.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = TempFilePath,
+                ManifestPath = new TaskItem(TempFilePath),
             };
 
             // Act
@@ -88,7 +89,7 @@ namespace Microsoft.NET.Sdk.Razor.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = TempFilePath,
+                ManifestPath = new TaskItem(TempFilePath),
             };
 
             // Act
@@ -200,7 +201,7 @@ namespace Microsoft.NET.Sdk.Razor.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = TempFilePath,
+                ManifestPath = new TaskItem(TempFilePath),
             };
 
             // Act
@@ -270,7 +271,7 @@ namespace Microsoft.NET.Sdk.Razor.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = TempFilePath,
+                ManifestPath = new TaskItem(TempFilePath),
             };
 
             // Act
@@ -303,7 +304,7 @@ namespace Microsoft.NET.Sdk.Razor.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = TempFilePath,
+                ManifestPath = new TaskItem(TempFilePath),
             };
 
             // Act
@@ -341,7 +342,7 @@ namespace Microsoft.NET.Sdk.Razor.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = TempFilePath,
+                ManifestPath = new TaskItem(TempFilePath),
             };
 
             // Act

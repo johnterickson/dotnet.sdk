@@ -205,7 +205,7 @@ public class GenerateStaticWebAssetEndpointsManifestTest
             Endpoints = endpoints.Select(e => e.ToTaskItem()).ToArray(),
             ManifestType = "Build",
             Source = "MyApp",
-            ManifestPath = path,
+            ManifestPath = new TaskItem(path),
             BuildEngine = Mock.Of<IBuildEngine>()
         };
 

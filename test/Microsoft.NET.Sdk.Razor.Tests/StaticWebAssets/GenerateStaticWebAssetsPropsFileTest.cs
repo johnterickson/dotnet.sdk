@@ -340,7 +340,7 @@ namespace Microsoft.NET.Sdk.Razor.Test
                 var task = new GenerateStaticWebAssetsPropsFile
                 {
                     BuildEngine = buildEngine.Object,
-                    TargetPropsFilePath = file,
+                    TargetPropsFilePath = CreateItem(file, new Dictionary<string, string>()),
                     StaticWebAssets = new TaskItem[]
                     {
                         CreateItem(Path.Combine("wwwroot","js","sample.js"), new Dictionary<string,string>
@@ -435,7 +435,7 @@ namespace Microsoft.NET.Sdk.Razor.Test
                 var task = new GenerateStaticWebAssetsPropsFile
                 {
                     BuildEngine = buildEngine.Object,
-                    TargetPropsFilePath = file,
+                    TargetPropsFilePath = CreateItem(file, new Dictionary<string, string>()),
                     StaticWebAssets = new TaskItem[]
                     {
                         CreateItem(Path.Combine("wwwroot","js","sample.js"), new Dictionary<string,string>
