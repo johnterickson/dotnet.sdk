@@ -254,7 +254,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           <ResultType>StaticWebAssetResolved</ResultType>
         </_CachedBuildStaticWebAssetItemsDeferred>
         <_CachedBuildStaticWebAssetItemsDeferred Deferred="true" Include="@(_CachedBuildReferencedStaticWebAssetEndpoints)">
-          <ResultType>StaticWebAssetEndpoints</ResultType>
+          <ResultType>StaticWebAssetEndpoint</ResultType>
         </_CachedBuildStaticWebAssetItemsDeferred>
       </ItemGroup>
   </Target>

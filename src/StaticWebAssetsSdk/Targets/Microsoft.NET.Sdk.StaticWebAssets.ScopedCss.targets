@@ -272,7 +272,7 @@ Integration with static web assets:
     <Output TaskParameter="Assets" ItemName="_ScopedCssAppBundleStaticWebAsset" />
   </DefineStaticWebAssets>
 
-  <ResolveStaticWebAssetFingerprints Condition="@(_AllScopedCss) != ''" Assets="$(_ScopedCssAppBundleStaticWebAsset)">
+  <ResolveStaticWebAssetFingerprints Condition="@(_AllScopedCss) != ''" Assets="@(_ScopedCssAppBundleStaticWebAsset)">
     <Output TaskParameter="Assets" ItemName="_ScopedCssAppBundleStaticWebAssetResolved" />
   </ResolveStaticWebAssetFingerprints>
 
@@ -319,7 +319,7 @@ Integration with static web assets:
     <Output TaskParameter="Assets" ItemName="_ScopedCssProjectBundleStaticWebAsset" />
   </DefineStaticWebAssets>
 
-  <ResolveStaticWebAssetFingerprints Condition="@(_AllScopedCss) != ''" Assets="$(_ScopedCssProjectBundleStaticWebAsset)">
+  <ResolveStaticWebAssetFingerprints Condition="@(_AllScopedCss) != ''" Assets="@(_ScopedCssProjectBundleStaticWebAsset)">
     <Output TaskParameter="Assets" ItemName="_ScopedCssProjectBundleStaticWebAssetResolved" />
   </ResolveStaticWebAssetFingerprints>
 
