@@ -230,7 +230,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_BuildJSModulessWithoutEndpoints" />
   </FilterStaticWebAssetEndpoints>
 
-  <Error Condition="'@(_ExistingBuildJSModules)' != ''" DeferredCondition="'@(_BuildJSModulessWithoutEndpoints)' != ''"
+  <Error PrecomputationMode="Dynamic" Condition="'@(_ExistingBuildJSModules)' != ''" DeferredCondition="'@(_BuildJSModulessWithoutEndpoints)' != ''"
     Text="The following scoped css bundles do not have matching endpoints: @(_BuildJSModulessWithoutEndpoints)" />
 
   <ResolveStaticWebAssetEndpointRoutes

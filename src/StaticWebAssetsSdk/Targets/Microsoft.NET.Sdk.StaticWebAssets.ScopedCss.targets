@@ -433,7 +433,7 @@ Integration with static web assets:
     <Output TaskParameter="AssetsWithoutMatchingEndpoints" ItemName="_ScopedCssBundlesWithoutEndpoints" />
   </FilterStaticWebAssetEndpoints>
 
-  <Error Condition="'@(_ScopedCssProjectBundles)' != ''" DeferredCondition="'@(_ScopedCssBundlesWithoutEndpoints)' != ''"
+  <Error PrecomputationMode="Dynamic" Condition="'@(_ScopedCssProjectBundles)' != ''" DeferredCondition="'@(_ScopedCssBundlesWithoutEndpoints)' != ''"
     Text="The following scoped css bundles do not have matching endpoints: @(_ScopedCssBundlesWithoutEndpoints)" />
 
   <ResolveStaticWebAssetEndpointRoutes
