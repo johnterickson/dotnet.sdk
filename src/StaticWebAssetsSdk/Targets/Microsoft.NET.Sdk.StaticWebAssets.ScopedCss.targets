@@ -47,7 +47,7 @@ Integration with static web assets:
 <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ResolveAllScopedCssAssets"  AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" PrecomputationMode="Static" />
 <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ApplyCssScopes" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" />
 <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ComputeCssScope" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" />
-<UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.RewriteCss" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" />
+<UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.RewriteCss" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" PrecomputationMode="Dynamic" />
 <UsingTask TaskName="Microsoft.AspNetCore.StaticWebAssets.Tasks.ConcatenateCssFiles" AssemblyFile="$(StaticWebAssetsSdkBuildTasksAssembly)" PrecomputationMode="Dynamic" />
 
 <PropertyGroup>

@@ -828,7 +828,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     with options from the project.
     ============================================================
      -->
-  <UsingTask TaskName="CreateAppHost" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="CreateAppHost" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
   <Target Name="_CreateAppHost"
           Inputs="@(IntermediateAssembly);$(AppHostSourcePath)"
           Outputs="$(AppHostIntermediatePath)"
@@ -1196,7 +1196,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </CreateSatelliteAssembliesDependsOn>
   </PropertyGroup>
 
-  <UsingTask TaskName="GetAssemblyAttributes" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="GetAssemblyAttributes" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
 
   <Target Name="CoreGenerateSatelliteAssemblies"
           DisplayName="Generate Satellite Assembly $(IntermediateOutputPath)%(Culture)\$(TargetName).resources.dll"
