@@ -443,7 +443,9 @@ Copyright (c) .NET Foundation. All rights reserved.
     Then further splits those into 'Unbundled' buckets based on the single file setting.
     ============================================================
     -->
-  <Target Name="_ComputeResolvedFilesToPublishTypes" Deferred="Item:ResolvedFileToPublish:r;Property:PublishSingleFile:r">
+  <Target Name="_ComputeResolvedFilesToPublishTypes" 
+    PrecomputeMerge="GenerateOutDir"
+    Deferred="Item:ResolvedFileToPublish:r;Property:PublishSingleFile:r">
     <ItemGroup>
 
       <_ResolvedFileToPublishPreserveNewestDeps Include="@(ResolvedFileToPublishDeps)" />
@@ -519,6 +521,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="ComputeResolvedFilesToPublishList"
+          PrecomputeMerge="GenerateOutDir"
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
                             ComputeRefAssembliesToPublish"
@@ -594,7 +597,8 @@ Copyright (c) .NET Foundation. All rights reserved.
          to ensure that we don't get duplicate files in the publish output. -->
     <ResolveOverlappingItemGroupConflicts ItemGroup1="@(_ResolvedCopyLocalPublishAssetsDistinct)"
                         ItemGroup2="@(ResolvedFileToPublish->Distinct())"
-                        PreferredPackages="$(PackageConflictPreferredPackages)">
+                        PreferredPackages="$(PackageConflictPreferredPackages)"
+                        PrecomputeInputs="@(ResolvedFileToPublish)">
       <Output TaskParameter="RemovedItemGroup1" ItemName="_ResolvedCopyLocalPublishAssetsRemoved" />
       <Output TaskParameter="RemovedItemGroup2" ItemName="ResolvedFileToPublishRemoved" />
     </ResolveOverlappingItemGroupConflicts>
@@ -1242,6 +1246,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           Condition="'$(GenerateDependencyFile)' == 'true' and '$(_UseBuildDependencyFile)' != 'true' and '$(PublishAot)' != 'true'"
           Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects);$(_GeneratePublishDependencyFilePropertyInputsCache);@(ReferenceCopyLocalPathsDeps)"
           Outputs="$(IntermediateDepsFilePath)"
+          PrecomputeMerge="GenerateOutDir"
           Deferred="Property:IntermediateDepsFilePath:r;Property:ProjectDepsFileName:r">
 
     <PropertyGroup>
