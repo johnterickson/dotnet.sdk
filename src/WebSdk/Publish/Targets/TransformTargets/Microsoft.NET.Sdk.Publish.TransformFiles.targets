@@ -13,7 +13,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask TaskName="TransformWebConfig" AssemblyFile="$(_PublishTaskAssemblyFullPath)"/>
+  <UsingTask TaskName="TransformWebConfig" AssemblyFile="$(_PublishTaskAssemblyFullPath)" PrecomputationMode="Dynamic" />
   <UsingTask TaskName="TransformAppSettings" AssemblyFile="$(_PublishTaskAssemblyFullPath)"/>
   <UsingTask TaskName="GenerateEFSQLScripts" AssemblyFile="$(_PublishTaskAssemblyFullPath)"/>
   <UsingTask TaskName="GenerateRunCommandFile" AssemblyFile="$(_PublishTaskAssemblyFullPath)"/>
