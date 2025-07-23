@@ -350,7 +350,7 @@ Copyright (c) .NET Foundation. All rights reserved.
                       RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"
                       IncludeProjectsNotInAssetsFile="$(IncludeProjectsNotInAssetsFileInDepsFile)"
                       ValidRuntimeIdentifierPlatformsForAssets="@(_ValidRuntimeIdentifierPlatformsForAssets)"
-                      PrecomputeInputs="@(NativeCopyLocalItems);@(ResourceCopyLocalItems);@(RuntimeCopyLocalItems);@(RuntimeTargetsCopyLocalItems)"/>
+                      PrecomputeInputs="@(NativeCopyLocalItems);@(ResourceCopyLocalItems);@(RuntimeCopyLocalItems);@(RuntimeTargetsCopyLocalItems);@(ProjectReference)"/>
     <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <!-- Do this in an ItemGroup instead of as an output parameter of the GenerateDepsFile task so that it still gets added to the item set
            during incremental builds when the task is skipped -->
