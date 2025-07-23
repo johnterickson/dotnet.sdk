@@ -17,6 +17,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Target _FilterIISAssets -->
   <!--********************************************************************-->
   <Target Name="_FilterIISAssets"
+          PrecomputeMerge="GenerateOutDir"
           Condition="'$(PublishIISAssets)' == 'false'"
           AfterTargets="ComputeResolvedFilesToPublishList"
           BeforeTargets="CopyFilesToPublishDirectory">
