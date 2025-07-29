@@ -419,7 +419,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </Copy>
   </Target>
 
-  <UsingTask TaskName="ResolveReadyToRunCompilers" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask TaskName="ResolveReadyToRunCompilers" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic"  />
   <Target Name="ResolveReadyToRunCompilers">
     <ResolveReadyToRunCompilers RuntimePacks="@(ResolvedRuntimePack)"
                                 Crossgen2Packs="@(ResolvedCrossgen2Pack)"
