@@ -381,7 +381,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="PrepareForReadyToRunCompilation" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <Target Name="_PrepareForReadyToRunCompilation" DependsOnTargets="ResolveReadyToRunCompilers;_ComputeManagedRuntimePackAssemblies;_ComputeAssembliesToPostprocessOnPublish">
+  <Target Name="_PrepareForReadyToRunCompilation" DependsOnTargets="ResolveReadyToRunCompilers;_ComputeManagedRuntimePackAssemblies;_ComputeAssembliesToPostprocessOnPublish"
+    Deferred="Item:ResolvedFileToPublish:r">
 
     <PropertyGroup>
       <_ReadyToRunOutputPath>$(IntermediateOutputPath)R2R</_ReadyToRunOutputPath>
