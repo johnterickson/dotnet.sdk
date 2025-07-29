@@ -1006,7 +1006,9 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <!-- Determine the managed assembly subset of ResolvedFileToPublish that should be post-processed by linker, and ready to run compilation -->
   <Target Name="_ComputeAssembliesToPostprocessOnPublish"
-          DependsOnTargets="_ComputeUserRuntimeAssemblies;$(_ComputeManagedRuntimePackAssembliesIfSelfContained)">
+          DependsOnTargets="_ComputeUserRuntimeAssemblies;$(_ComputeManagedRuntimePackAssembliesIfSelfContained)"
+          PrecomputationMode="Dynamic"
+          Deferred="Item:UserRuntimeAssembly:r">
 
     <!--
       Default set of files to post-process correspond to the items that would be designated
@@ -1021,7 +1023,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       <_ManagedRuntimeAssembly Include="@(RuntimeCopyLocalItems)" />
 
       <!-- Assemblies from other references -->
-      <_ManagedRuntimeAssembly Include="@(UserRuntimeAssembly)" />
+      <_ManagedRuntimeAssembly Deferred="true" Include="@(UserRuntimeAssembly)" />
 
       <!-- Assembly produced by this project -->
       <_ManagedRuntimeAssembly Include="@(IntermediateAssembly)" />
@@ -1029,7 +1031,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <!-- Assemblies from runtime packs for self-contained apps -->
     <ItemGroup Condition="'$(SelfContained)' == 'true'">
-      <_ManagedRuntimeAssembly Include="@(_ManagedRuntimePackAssembly)" />
+      <_ManagedRuntimeAssembly Deferred="true" Include="@(_ManagedRuntimePackAssembly)" />
     </ItemGroup>
 
     <!--
