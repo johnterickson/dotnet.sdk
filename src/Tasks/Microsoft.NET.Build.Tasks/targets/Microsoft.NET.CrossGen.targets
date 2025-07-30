@@ -380,7 +380,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     Prepare build for ReadyToRun compilations. Builds list of assemblies to compile, and computes paths to ReadyToRun compiler bits
     ============================================================
     -->
-  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="PrepareForReadyToRunCompilation" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="PrepareForReadyToRunCompilation" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
   <Target Name="_PrepareForReadyToRunCompilation" DependsOnTargets="ResolveReadyToRunCompilers;_ComputeManagedRuntimePackAssemblies;_ComputeAssembliesToPostprocessOnPublish"
     Deferred="Item:ResolvedFileToPublish:r">
 
@@ -391,7 +391,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <MakeDir Directories="$(_ReadyToRunOutputPath)" />
 
     <ItemGroup>
-      <_ReadyToRunImplementationAssemblies Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />
+      <_ReadyToRunImplementationAssemblies Deferred="true" Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />
     </ItemGroup>
 
     <!-- Even if app is not self-contained, crossgen requires closure of implementation assemblies. Resolve conflicts
