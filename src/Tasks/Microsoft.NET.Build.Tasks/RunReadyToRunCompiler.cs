@@ -8,6 +8,7 @@ namespace Microsoft.NET.Build.Tasks
 {
     public class RunReadyToRunCompiler : ToolTask
     {
+        public string DummyParameterToBatchOn { get; set; }
         public ITaskItem CrossgenTool { get; set; }
         public ITaskItem Crossgen2Tool { get; set; }
 

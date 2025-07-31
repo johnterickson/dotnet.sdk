@@ -344,20 +344,23 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
   <Target Name="CreateReadyToRunImages"
           Condition="'$(_TargetFrameworkVersionWithoutV)' >= '3.0' And '$(PublishReadyToRun)' == 'true' And '$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
-          DependsOnTargets="_PrepareForReadyToRunCompilation;
-                            _CreateR2RImages;
-                            _CreateR2RSymbols">
+          Deferred="Item:ResolvedFileToPublish:r
+                    Item:ResolvedFileToPublish:w;
+                    Item:_ReadyToRunCompileList:w;
+                    Property:_ReadyToRunCompilationFailures:r;
+                    Property:_ReadyToRunCompilerHasWarnings:r;"
+          DependsOnTargets="_CreateR2RImagesAndSymbols">
     <ItemGroup>
       <R2RTelemetry Include="PublishReadyToRunUseCrossgen2" Value="$(PublishReadyToRunUseCrossgen2)" />
       <R2RTelemetry Include="Crossgen2PackVersion" Value="%(ResolvedCrossgen2Pack.NuGetPackageVersion)" />
-      <R2RTelemetry Include="CompileListCount" Value="@(_ReadyToRunCompileList->Count())" />
+      <R2RTelemetry Deferred="true" Include="CompileListCount" Value="@(_ReadyToRunCompileList->Count())" />
       <R2RTelemetry Include="FailedCount" Value="@(_ReadyToRunCompilationFailures->Count())" />
     </ItemGroup>
-    <AllowEmptyTelemetry EventName="ReadyToRun" EventData="@(R2RTelemetry)" />
+    <AllowEmptyTelemetry PrecomputationMode="Dynamic" EventName="ReadyToRun" EventData="@(R2RTelemetry)" />
 
-    <NETSdkError Condition="'@(_ReadyToRunCompilationFailures)' != ''" ResourceName="ReadyToRunCompilationFailed" />
+    <NETSdkError PrecomputationMode="Dynamic" DeferredCondition="'@(_ReadyToRunCompilationFailures)' != ''" ResourceName="ReadyToRunCompilationFailed" />
 
-    <NETSdkInformation Condition="'$(_ReadyToRunCompilerHasWarnings)' != ''" ResourceName="ReadyToRunCompilationHasWarnings_Info" />
+    <NETSdkInformation PrecomputationMode="Dynamic" DeferredCondition="'$(_ReadyToRunCompilerHasWarnings)' != ''" ResourceName="ReadyToRunCompilationHasWarnings_Info" />
 
     <ItemGroup>
       <!--
@@ -366,12 +369,42 @@ Copyright (c) .NET Foundation. All rights reserved.
       and do not replace them. IL PDBs are still required for debugging. Native PDBs emitted by the R2R compiler are
       only used for profiling purposes.
       -->
-      <ResolvedFileToPublish Remove="@(_ReadyToRunCompositeBuildInput)" />
-      <ResolvedFileToPublish Remove="@(_ReadyToRunCompileList)" />
-      <ResolvedFileToPublish Include="@(_ReadyToRunFilesToPublish)" />
+      <ResolvedFileToPublish Deferred="true"  Remove="@(_ReadyToRunCompositeBuildInput)" />
+      <ResolvedFileToPublish Deferred="true" Remove="@(_ReadyToRunCompileList)" />
+      <ResolvedFileToPublish Deferred="true" Include="@(_ReadyToRunFilesToPublish)" />
     </ItemGroup>
-
   </Target>
+
+  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="ResolveReadyToRunCompilers" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
+  <Target Name="ResolveReadyToRunCompilers">
+    <ResolveReadyToRunCompilers RuntimePacks="@(ResolvedRuntimePack)"
+                                Crossgen2Packs="@(ResolvedCrossgen2Pack)"
+                                TargetingPacks="@(ResolvedTargetingPack)"
+                                RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"
+                                NETCoreSdkRuntimeIdentifier="$(NETCoreSdkRuntimeIdentifier)"
+                                EmitSymbols="$(PublishReadyToRunEmitSymbols)"
+                                ReadyToRunUseCrossgen2="$(PublishReadyToRunUseCrossgen2)"
+                                PerfmapFormatVersion="$(PublishReadyToRunPerfmapFormatVersion)">
+
+      <Output TaskParameter="CrossgenTool" ItemName="CrossgenTool" />
+      <Output TaskParameter="Crossgen2Tool" ItemName="Crossgen2Tool" />
+    </ResolveReadyToRunCompilers>
+  </Target>
+  
+
+    <!--
+    ============================================================
+                                        _CreateR2RImagesAndSymbols
+    ============================================================
+    -->
+  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="PrepareForReadyToRunCompilation" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
+  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="RunReadyToRunCompiler" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic"/>
+  <Target Name="_CreateR2RImagesAndSymbols" DependsOnTargets="ResolveReadyToRunCompilers;_ComputeManagedRuntimePackAssemblies;_ComputeAssembliesToPostprocessOnPublish"
+    PrecomputeInputs="$(MSBuildAllProjects)"
+    Deferred="
+      Item:ResolvedFileToPublish:r;
+      Item:_ReadyToRunCompileList:w;
+      Item:_ReadyToRunCompileList:r;">
 
   <!--
     ============================================================
@@ -380,9 +413,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     Prepare build for ReadyToRun compilations. Builds list of assemblies to compile, and computes paths to ReadyToRun compiler bits
     ============================================================
     -->
-  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="PrepareForReadyToRunCompilation" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
-  <Target Name="_PrepareForReadyToRunCompilation" DependsOnTargets="ResolveReadyToRunCompilers;_ComputeManagedRuntimePackAssemblies;_ComputeAssembliesToPostprocessOnPublish"
-    Deferred="Item:ResolvedFileToPublish:r">
 
     <PropertyGroup>
       <_ReadyToRunOutputPath>$(IntermediateOutputPath)R2R</_ReadyToRunOutputPath>
@@ -438,36 +468,17 @@ Copyright (c) .NET Foundation. All rights reserved.
       <Output TaskParameter="ReadyToRunCompositeBuildInput" ItemName="_ReadyToRunCompositeBuildInput" />
 
     </PrepareForReadyToRunCompilation>
-  </Target>
-
-  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="ResolveReadyToRunCompilers" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
-  <Target Name="ResolveReadyToRunCompilers">
-    <ResolveReadyToRunCompilers RuntimePacks="@(ResolvedRuntimePack)"
-                                Crossgen2Packs="@(ResolvedCrossgen2Pack)"
-                                TargetingPacks="@(ResolvedTargetingPack)"
-                                RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"
-                                NETCoreSdkRuntimeIdentifier="$(NETCoreSdkRuntimeIdentifier)"
-                                EmitSymbols="$(PublishReadyToRunEmitSymbols)"
-                                ReadyToRunUseCrossgen2="$(PublishReadyToRunUseCrossgen2)"
-                                PerfmapFormatVersion="$(PublishReadyToRunPerfmapFormatVersion)">
-
-      <Output TaskParameter="CrossgenTool" ItemName="CrossgenTool" />
-      <Output TaskParameter="Crossgen2Tool" ItemName="Crossgen2Tool" />
-    </ResolveReadyToRunCompilers>
-  </Target>
 
   <!--
-    ============================================================
-                                        _CreateR2RImages
+  ============================================================
+                                      _CreateR2RImages
 
-    Compiles assemblies in the _ReadyToRunCompileList list into ReadyToRun images
-    ============================================================
-    -->
-  <UsingTask Condition="'$(Crossgen2TasksOverriden)' != 'true'" TaskName="RunReadyToRunCompiler" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-  <Target Name="_CreateR2RImages"
-          Inputs="$(MSBuildAllProjects);@(_ReadyToRunCompileList);@(_ReadyToRunCompositeBuildInput);@(_ReadyToRunPgoFiles)"
-          Outputs="%(_ReadyToRunCompileList.OutputR2RImage);%(_ReadyToRunCompileList.OutputPDBImage)">
-
+  Compiles assemblies in the _ReadyToRunCompileList list into ReadyToRun images
+  ============================================================
+  -->
+  <!-- Inputs="$(MSBuildAllProjects);@(_ReadyToRunCompileList);@(_ReadyToRunCompositeBuildInput);@(_ReadyToRunPgoFiles)" -->
+  <!-- Outputs="%(_ReadyToRunCompileList.OutputR2RImage);%(_ReadyToRunCompileList.OutputPDBImage)" -->
+  
     <RunReadyToRunCompiler CrossgenTool="@(CrossgenTool)"
                            Crossgen2Tool="@(Crossgen2Tool)"
                            UseCrossgen2="$(PublishReadyToRunUseCrossgen2)"
@@ -478,6 +489,7 @@ Copyright (c) .NET Foundation. All rights reserved.
                            CompilationEntry="@(_ReadyToRunCompileList)"
                            ContinueOnError="ErrorAndContinue"
                            ReadyToRunCompositeBuildReferences="@(_ReadyToRunCompositeBuildReferences)"
+                           DummyParameterToBatchOn="%(_ReadyToRunCompileList.Identity)"
                            ReadyToRunCompositeBuildInput="@(_ReadyToRunCompositeBuildInput)">
       <Output TaskParameter="ExitCode" PropertyName="_ReadyToRunCompilerExitCode" />
       <Output TaskParameter="WarningsDetected" PropertyName="_ReadyToRunWarningsDetected" />
@@ -489,10 +501,9 @@ Copyright (c) .NET Foundation. All rights reserved.
     </PropertyGroup>
 
     <ItemGroup>
-      <_ReadyToRunCompilationFailures Condition="'$(_ReadyToRunCompilerExitCode)' != '' And $(_ReadyToRunCompilerExitCode) != 0"
-                                      Include="@(_ReadyToRunCompileList)" />
+      <_ReadyToRunCompilationFailures Deferred="true" DeferredCondition="'$(_ReadyToRunCompilerExitCode)' != '' And $(_ReadyToRunCompilerExitCode) != 0"
+                                      Include="%(_ReadyToRunCompileList)" />
     </ItemGroup>
-  </Target>
 
   <!--
     ============================================================
@@ -501,10 +512,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     Emit native symbols for ReadyToRun images in the _ReadyToRunSymbolsCompileList list
     ============================================================
     -->
-  <Target Name="_CreateR2RSymbols"
-          Inputs="$(MSBuildAllProjects);@(_ReadyToRunSymbolsCompileList)"
-          Outputs="%(_ReadyToRunSymbolsCompileList.OutputPDBImage)"
-          Condition="'$(PublishReadyToRunUseCrossgen2)' != 'true' or '@(Crossgen2Tool -> '%(IsVersion5)')' == 'true'">
     <RunReadyToRunCompiler CrossgenTool="@(CrossgenTool)"
                            Crossgen2Tool="@(Crossgen2Tool)"
                            UseCrossgen2="$(PublishReadyToRunUseCrossgen2)"
@@ -512,6 +519,8 @@ Copyright (c) .NET Foundation. All rights reserved.
                            ImplementationAssemblyReferences="@(_ReadyToRunAssembliesToReference)"
                            ShowCompilerWarnings="$(PublishReadyToRunShowWarnings)"
                            CompilationEntry="@(_ReadyToRunSymbolsCompileList)"
+                           DummyParameterToBatchOn="%(_ReadyToRunSymbolsCompileList.Identity)"
+                           DeferredCondition="'$(PublishReadyToRunUseCrossgen2)' != 'true' or '@(Crossgen2Tool -> '%(IsVersion5)')' == 'true'"
                            ContinueOnError="ErrorAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_ReadyToRunCompilerExitCode" />
       <Output TaskParameter="WarningsDetected" PropertyName="_ReadyToRunWarningsDetected" />
@@ -524,7 +533,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <ItemGroup>
       <_ReadyToRunCompilationFailures Condition="'$(_ReadyToRunCompilerExitCode)' != '' And $(_ReadyToRunCompilerExitCode) != 0"
-                                      Include="@(_ReadyToRunSymbolsCompileList)" />
+                                      Include="%(_ReadyToRunSymbolsCompileList)" />
     </ItemGroup>
   </Target>
 </Project>
