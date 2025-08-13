@@ -314,7 +314,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </Target>
 
-  <Target Name="GenerateJSModuleManifestPublishStaticWebAssets" DependsOnTargets="$(GenerateJSModuleManifestPublishStaticWebAssetsDependsOn)">
+  <Target Name="GenerateJSModuleManifestPublishStaticWebAssets" DependsOnTargets="$(GenerateJSModuleManifestPublishStaticWebAssetsDependsOn)"
+          Deferred="Item:_ExistingPublishJSModulesWithoutFingerprint:w">
 
     <!-- Incrementalism is built into the task itself. -->
     <ItemGroup>
