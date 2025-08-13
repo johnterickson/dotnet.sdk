@@ -40,7 +40,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Target _DeletePublishIntermediateOutputPath -->
   <!--********************************************************************-->
 
-  <Target Name="_DeletePublishIntermediateOutputPath">
+  <Target Name="_DeletePublishIntermediateOutputPath" PrecomputeMerge="GenerateOutDir" PrecomputeOutputs="$(PublishIntermediateOutputPath)#dir">
 
     <!-- Remove all the files from the temp directory first-->
     <ItemGroup>
@@ -57,7 +57,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!--********************************************************************-->
   <!-- Target _CopyAllFilesToPublishIntermediateOutputPath -->
   <!--********************************************************************-->
-  <Target Name="_CopyFilesToPublishIntermediateOutputPath">
+  <Target Name="_CopyFilesToPublishIntermediateOutputPath" PrecomputeMerge="GenerateOutDir" PrecomputeOutputs="$(PublishIntermediateOutputPath)#dir">
 
     <Copy
     SourceFiles="@(DotNetPublishFiles)"
