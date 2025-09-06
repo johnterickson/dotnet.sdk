@@ -182,7 +182,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     Prepare the prerequisites for publishing.
     ============================================================
     -->
-  <Target Name="PrepareForPublish">
+  <Target Name="PrepareForPublish" PrecomputeMerge="GeneratePublishDir">
 
     <NETSdkError Condition="'$(PublishSingleFile)' == 'true' And '$(_IsExecutable)' != 'true'"
                  ResourceName="CannotHaveSingleFileWithoutExecutable" />
@@ -342,6 +342,33 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
   </Target>
 
+    <Target
+      Name="_Compute_CopyResolvedFilesToPublishPreserveNewest"
+      PrecomputeMerge="GeneratePublishDir"
+      Condition="'@(_ResolvedFileToPublishPreserveNewestDeps)' != '' and '$(IsPrecomputePhase)' == 'true'"
+      PrecomputeInputs="@(_ResolvedFileToPublishPreserveNewestDeps)"
+      Deferred="
+        Property:PublishDir:r;
+        Item:_ResolvedFileToPublishPreserveNewest:r;
+        Item:Computed_ReferencesCopiedInThisBuild:w"
+        >
+
+    <ItemGroup>
+      <_Compute_CopyResolvedFilesToPublishPreserveNewestOutputs Deferred="true" Include="@(_ResolvedFileToPublishPreserveNewest->'$(PublishDir)%(RelativePath)')" />
+    </ItemGroup>
+
+    <Copy
+        Regraph="0"
+        NoPredict="true"
+        DryRun="true"
+        SourceFiles="@(_ResolvedFileToPublishPreserveNewest)"
+        DestinationFiles="@(_Compute_CopyResolvedFilesToPublishPreserveNewestOutputs)"
+            >
+
+      <Output TaskParameter="CopiedFiles" ItemName="Computed_ReferencesCopiedInThisBuild"/>
+    </Copy>
+  </Target>
+
   <!--
     ============================================================
                                         _CopyResolvedFilesToPublishPreserveNewest
@@ -350,8 +377,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_CopyResolvedFilesToPublishPreserveNewest"
-          PrecomputeMerge="GenerateOutDir"
-          DependsOnTargets="_ComputeResolvedFilesToPublishTypes;_CopyResolvedFilesToPublishPreserveNewestOutput"
+          PrecomputeMerge="GeneratePublishDir"
+          DependsOnTargets="_ComputeResolvedFilesToPublishTypes;_CopyResolvedFilesToPublishPreserveNewestOutput;_Compute_CopyResolvedFilesToPublishPreserveNewest"
           Inputs="@(_ResolvedFileToPublishPreserveNewestDeps)"
           Outputs="@(_CopyResolvedFilesToPublishPreserveNewestOutputs)"
           Deferred="Item:_ResolvedFileToPublishPreserveNewest:r;Property:PublishDir:r">
@@ -390,7 +417,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
   <Target Name="_CopyResolvedFilesToPublishAlways"
           DependsOnTargets="_ComputeResolvedFilesToPublishTypes"
-          PrecomputeMerge="GenerateOutDir"
+          PrecomputeMerge="GeneratePublishDir"
           PrecomputeInputs="@(_ResolvedFileToPublishAlwaysDeps)"
           Deferred="Item:_ResolvedFileToPublishAlways:r;Property:PublishDir:r">
 
@@ -444,7 +471,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="_ComputeResolvedFilesToPublishTypes" 
-    PrecomputeMerge="GenerateOutDir"
+    PrecomputeMerge="GeneratePublishDir"
     Deferred="Item:ResolvedFileToPublish:r;Property:PublishSingleFile:r">
     <ItemGroup>
 
@@ -521,7 +548,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="ComputeResolvedFilesToPublishList"
-          PrecomputeMerge="GenerateOutDir"
+          PrecomputeInputs="@(_ResolvedCopyLocalPublishAssetsDeps)"
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
                             ComputeRefAssembliesToPublish"
@@ -1246,9 +1273,8 @@ Copyright (c) .NET Foundation. All rights reserved.
                             _ComputePackageReferencePublish;
                             _GeneratePublishDependencyFileInputCache"
           Condition="'$(GenerateDependencyFile)' == 'true' and '$(_UseBuildDependencyFile)' != 'true' and '$(PublishAot)' != 'true'"
-          Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects);$(_GeneratePublishDependencyFilePropertyInputsCache);@(ReferenceCopyLocalPathsDeps)"
+          Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects);$(_GeneratePublishDependencyFilePropertyInputsCache);@(ReferenceCopyLocalPathsDeps);@(ProjectReference)"
           Outputs="$(IntermediateDepsFilePath)"
-          PrecomputeMerge="GenerateOutDir"
           Deferred="Property:IntermediateDepsFilePath:r;Property:ProjectDepsFileName:r">
 
     <PropertyGroup>

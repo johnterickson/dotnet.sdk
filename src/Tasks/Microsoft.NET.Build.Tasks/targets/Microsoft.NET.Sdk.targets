@@ -85,7 +85,9 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ProjectDepsFileName Condition="'$(ProjectDepsFileName)' == ''">$(AssemblyName).deps.json</ProjectDepsFileName>
     <ProjectDepsFilePath Condition="'$(ProjectDepsFilePath)' == ''">$(TargetDir)$(ProjectDepsFileName)</ProjectDepsFilePath>
     <ProjectRuntimeConfigFileName Condition="'$(ProjectRuntimeConfigFileName)' == ''">$(AssemblyName).runtimeconfig.json</ProjectRuntimeConfigFileName>
+    <ProjectRuntimeConfigIntermediateOutputPath Condition="'$(ProjectRuntimeConfigIntermediateOutputPath)' == ''">$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName)</ProjectRuntimeConfigIntermediateOutputPath>
     <ProjectRuntimeConfigFilePath Condition="'$(ProjectRuntimeConfigFilePath)' == ''">$(TargetDir)$(ProjectRuntimeConfigFileName)</ProjectRuntimeConfigFilePath>
+    <ProjectRuntimeConfigDevIntermediateOutputPath Condition="'$(ProjectRuntimeConfigDevIntermediateOutputPath)' == '' and $(GenerateRuntimeConfigDevFile) == 'true'">$(IntermediateOutputPath)$(AssemblyName).runtimeconfig.dev.json</ProjectRuntimeConfigDevIntermediateOutputPath>
     <ProjectRuntimeConfigDevFilePath Condition="'$(ProjectRuntimeConfigDevFilePath)' == '' and $(GenerateRuntimeConfigDevFile) == 'true'">$(TargetDir)$(AssemblyName).runtimeconfig.dev.json</ProjectRuntimeConfigDevFilePath>
     <IncludeMainProjectInDepsFile Condition=" '$(IncludeMainProjectInDepsFile)' == '' ">true</IncludeMainProjectInDepsFile>
   </PropertyGroup>
@@ -398,12 +400,11 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
 
   <Target Name="GenerateBuildRuntimeConfigurationFiles"
-          PrecomputeMerge="GenerateOutDir"
           DependsOnTargets="_GenerateRuntimeConfigurationFilesInputCache"
           BeforeTargets="CopyFilesToOutputDirectory"
           Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true'"
           Inputs="@(GenerateRuntimeConfigurationFilesInputs)"
-          Outputs="$(ProjectRuntimeConfigFilePath);$(ProjectRuntimeConfigDevFilePath)">
+          Outputs="$(ProjectRuntimeConfigIntermediateOutputPath);$(ProjectRuntimeConfigDevFilePath)">
 
     <PropertyGroup>
       <_IsRollForwardSupported Condition="'$(_TargetFrameworkVersionWithoutV)' &gt;= '3.0'">true</_IsRollForwardSupported>
@@ -423,7 +424,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <GenerateRuntimeConfigurationFiles AssetsFilePath="$(ProjectAssetsFile)"
                                        TargetFramework="$(TargetFramework)"
                                        TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
-                                       RuntimeConfigPath="$(ProjectRuntimeConfigFilePath)"
+                                       RuntimeConfigPath="$(ProjectRuntimeConfigIntermediateOutputPath)"
                                        RuntimeConfigDevPath="$(ProjectRuntimeConfigDevFilePath)"
                                        RuntimeIdentifier="$(RuntimeIdentifier)"
                                        PlatformLibraryName="$(MicrosoftNETPlatformLibrary)"
@@ -446,6 +447,14 @@ Copyright (c) .NET Foundation. All rights reserved.
       <FileWrites Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')"/>
     </ItemGroup>
 
+  </Target>
+
+  <Target Name="CopyBuildRuntimeConfigurationFiles" PrecomputeMerge="GenerateOutDir" Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true'"
+          AfterTargets="GenerateBuildRuntimeConfigurationFiles">
+    <Copy SourceFiles="$(ProjectRuntimeConfigIntermediateOutputPath)"
+          DestinationFiles="$(ProjectRuntimeConfigFilePath)" />
+    <Copy SourceFiles="$(ProjectRuntimeConfigDevIntermediateOutputPath)"
+          DestinationFiles="$(ProjectRuntimeConfigDevFilePath)"/>
   </Target>
 
   <!-- Add runtimeconfig.json file to BuiltProjectOutputGroupOutput, so that it will get included in the NuGet package by the Pack target -->
