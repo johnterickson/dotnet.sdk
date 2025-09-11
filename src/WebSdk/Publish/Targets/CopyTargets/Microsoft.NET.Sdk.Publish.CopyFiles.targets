@@ -42,14 +42,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="_DeletePublishIntermediateOutputPath" PrecomputeMerge="GenerateOutDir" PrecomputeOutputs="$(PublishIntermediateOutputPath)#dir">
 
-    <!-- Remove all the files from the temp directory first-->
-    <ItemGroup>
-      <_PublishTempFiles Include="$(PublishIntermediateOutputPath)**\*.*" />
-    </ItemGroup>
-
-    <Delete Files="@(_PublishTempFiles)" ContinueOnError="true" />
-    <RemoveDir Directories="$(PublishIntermediateOutputPath)" ContinueOnError="true" Condition="Exists('$(PublishIntermediateOutputPath)')" />
-    <MakeDir Directories="$(PublishIntermediateOutputPath)" Condition="!Exists('$(PublishIntermediateOutputPath)')"/>
+    <!-- Why ContinueOnError? -->
+    <RemoveDir Directories="$(PublishIntermediateOutputPath)" ContinueOnError="true" />
+    <MakeDir Directories="$(PublishIntermediateOutputPath)" />
 
   </Target>
 

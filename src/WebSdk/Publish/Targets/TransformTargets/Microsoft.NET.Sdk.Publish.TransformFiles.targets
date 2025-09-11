@@ -66,13 +66,18 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         EnvironmentName="$(EnvironmentName)"/>
   </Target>
 
+  <Target Name="FindWebConfig" Deferred="Property:_WebConfigExists:w">
+    <PropertyGroup>
+      <_WebConfigExists Deferred="true">Exists('$(PublishIntermediateOutputPath)web.config')</_WebConfigExists>
+    </PropertyGroup>
+  </Target>
 
   <!--
   ***********************************************************************************************
   TARGET : _TransformXml
   ***********************************************************************************************
  -->
-  <Target Name="_TransformXml">
+  <Target Name="_TransformXml" DependsOnTargets="FindWebConfig" Deferred="Property:_WebConfigExists:r">
 
     <PropertyGroup>
       <_IsAspNetCoreProject Condition="%(ProjectCapability.Identity) == 'AspNetCore'">true</_IsAspNetCoreProject>
@@ -106,8 +111,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <TransformXml Condition=" '%(ProjectTransforms.Identity)' != ''
                   And Exists('%(ProjectTransforms.Identity)')
-                  And Exists('$(PublishIntermediateOutputPath)web.config')
                   And '$(RunXdt)' == 'true'"
+                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(ProjectTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
@@ -120,13 +125,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Run the Profile transforms next i.e $(PublishProfileDirectory)\$(PublishProfileName).transform -->
     <ItemGroup>
       <!-- Run the transform at the profile level e.g: Properties\PublishProfiles\FolderProfile.transform when the profile name is FolderProfile -->
-      <ProfileTransforms Condition=" '$(PublishProfileName)' != '' " Include="$(PublishProfileDirectory)\$(PublishProfileName).transform" />
+      <ProfileTransforms Condition=" '$(PublishProfileDirectory)' != '' And '$(PublishProfileName)' != '' " Include="$(PublishProfileDirectory)\$(PublishProfileName).transform" />
     </ItemGroup>
 
     <TransformXml Condition=" '%(ProfileTransforms.Identity)' != ''
                   And Exists('%(ProfileTransforms.Identity)')
-                  And Exists('$(PublishIntermediateOutputPath)web.config')
                   And '$(RunXdt)' == 'true'"
+                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(ProfileTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
@@ -148,8 +153,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <TransformXml Condition=" '%(CustomTransforms.Identity)' != ''
                   And Exists('%(CustomTransforms.Identity)')
-                  And Exists('$(PublishIntermediateOutputPath)web.config')
                   And '$(RunXdt)' == 'true'"
+                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(CustomTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
@@ -173,8 +178,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <TransformXml Condition=" '%(_GeneratedEnvironmentTransforms.Identity)' != ''
                   And Exists('%(_GeneratedEnvironmentTransforms.Identity)')
-                  And Exists('$(PublishIntermediateOutputPath)web.config')
                   And '$(RunXdt)' == 'true'"
+                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(_GeneratedEnvironmentTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
