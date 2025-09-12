@@ -51,7 +51,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   ***********************************************************************************************
  -->
 
-  <Target Name="_DeleteDestinationFilesIfSpecified">
+  <Target Name="_DeleteDestinationFilesIfSpecified" PrecomputationMode="Skip" >
     <PropertyGroup>
       <PublishUrl Condition="'$(PublishUrl)' != '' And !HasTrailingSlash('$(PublishUrl)')">$(PublishUrl)\</PublishUrl>
     </PropertyGroup>
