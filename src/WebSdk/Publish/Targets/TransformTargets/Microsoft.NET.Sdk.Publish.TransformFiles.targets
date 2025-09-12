@@ -66,9 +66,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         EnvironmentName="$(EnvironmentName)"/>
   </Target>
 
-  <Target Name="FindWebConfig" Deferred="Property:_WebConfigExists:w">
+  <Target Name="FindWebConfig" Deferred="Property:PublishIntermediateOutputPath:r;Property:_WebConfigPath:w">
     <PropertyGroup>
-      <_WebConfigExists Deferred="true">Exists('$(PublishIntermediateOutputPath)web.config')</_WebConfigExists>
+      <_WebConfigPath Deferred="true">$(PublishIntermediateOutputPath)web.config</_WebConfigPath>
     </PropertyGroup>
   </Target>
 
@@ -77,7 +77,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   TARGET : _TransformXml
   ***********************************************************************************************
  -->
-  <Target Name="_TransformXml" DependsOnTargets="FindWebConfig" Deferred="Property:_WebConfigExists:r">
+  <Target Name="_TransformXml" DependsOnTargets="FindWebConfig" Deferred="Property:_WebConfigPath:r">
 
     <PropertyGroup>
       <_IsAspNetCoreProject Condition="%(ProjectCapability.Identity) == 'AspNetCore'">true</_IsAspNetCoreProject>
@@ -112,7 +112,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TransformXml Condition=" '%(ProjectTransforms.Identity)' != ''
                   And Exists('%(ProjectTransforms.Identity)')
                   And '$(RunXdt)' == 'true'"
-                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
+                  DeferredCondition="'Exists('$_WebConfigPath')"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(ProjectTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
@@ -131,7 +131,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TransformXml Condition=" '%(ProfileTransforms.Identity)' != ''
                   And Exists('%(ProfileTransforms.Identity)')
                   And '$(RunXdt)' == 'true'"
-                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
+                  DeferredCondition="'Exists('$_WebConfigPath')"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(ProfileTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
@@ -154,7 +154,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TransformXml Condition=" '%(CustomTransforms.Identity)' != ''
                   And Exists('%(CustomTransforms.Identity)')
                   And '$(RunXdt)' == 'true'"
-                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
+                  DeferredCondition="'Exists('$_WebConfigPath')"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(CustomTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
@@ -179,7 +179,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TransformXml Condition=" '%(_GeneratedEnvironmentTransforms.Identity)' != ''
                   And Exists('%(_GeneratedEnvironmentTransforms.Identity)')
                   And '$(RunXdt)' == 'true'"
-                  DeferredCondition="'$(_WebConfigExists)' == 'true'"
+                  DeferredCondition="'Exists('$_WebConfigPath')"
                   Source="$(PublishIntermediateOutputPath)web.config"
                   Transform="%(_GeneratedEnvironmentTransforms.Identity)"
                   Destination="$(PublishIntermediateOutputPath)web.config"
