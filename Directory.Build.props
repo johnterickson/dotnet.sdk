@@ -3,6 +3,8 @@
 <Project TreatAsLocalProperty="Platform">
 
   <PropertyGroup>
+    <VSGeneratorVersionRange Condition="'$(VSGeneratorVersionRange)' == ''">[15,19.0)</VSGeneratorVersionRange>
+    <VSGenerator Condition="'$(VSGenerator)' == ''">Visual Studio 18 2026</VSGenerator>
     <BuildArchitecture Condition="'$(BuildArchitecture)' == ''">$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</BuildArchitecture>
     <Architecture Condition="'$(Architecture)' == '' AND ('$(BuildArchitecture)' == 'arm64')">$(BuildArchitecture)</Architecture>
     <Architecture Condition="'$(Architecture)' == '' AND '$(BuildArchitecture)' == 's390x'">$(BuildArchitecture)</Architecture>
