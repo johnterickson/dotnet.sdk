@@ -11,44 +11,47 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
 public class GenerateStaticWebAssetsManifest : Task
 {
-    [Required]
-    public string Source { get; set; }
-
-    [Required]
-    public string BasePath { get; set; }
-
-    [Required]
-    public string Mode { get; set; }
-
-    [Required]
-    public string ManifestType { get; set; }
-
-    [Required]
-    public ITaskItem[] ReferencedProjectsConfigurations { get; set; }
-
-    [Required]
-    public ITaskItem[] DiscoveryPatterns { get; set; }
-
-    [Required]
-    public ITaskItem[] Assets { get; set; }
-
-    [Required]
-    public ITaskItem[] Endpoints { get; set; }
-
-    [Required]
-    public string ManifestPath { get; set; }
-
-    public string ManifestCacheFilePath { get; set; }
-
-    public override bool Execute()
+    public class GenerateStaticWebAssetsManifest : Task, ITaskHybrid
     {
         try
         {
             var assets = StaticWebAsset.FromTaskItemGroup(Assets, validate: true);
             Array.Sort(assets, (l, r) => string.CompareOrdinal(l.Identity, r.Identity));
 
-            var endpoints = FilterPublishEndpointsIfNeeded(assets);
-            Array.Sort(endpoints, (l, r) => string.CompareOrdinal(l.Route, r.Route) switch
+        [Required]
+        public string Source { get; set; }
+
+        [Required]
+        public string BasePath { get; set; }
+
+        [Required]
+        public string Mode { get; set; }
+
+        [Required]
+        public string ManifestType { get; set; }
+
+        [Required]
+        public ITaskItem[] ReferencedProjectsConfigurations { get; set; }
+
+        [Required]
+        public ITaskItem[] DiscoveryPatterns { get; set; }
+
+        [Required]
+        public ITaskItem[] Assets { get; set; }
+
+        [Required]
+        public ITaskItem[] Endpoints { get; set; }
+
+        [Required]
+        [Output]
+        [PrecomputeOutput]
+        public ITaskItem ManifestPath { get; set; }
+
+        public bool ExecuteStatic() => true;
+
+        public override bool Execute()
+        {
+            try
             {
                 0 => string.CompareOrdinal(l.AssetFile, r.AssetFile),
                 int result => result,
@@ -131,10 +134,47 @@ public class GenerateStaticWebAssetsManifest : Task
 
         if (!fileExists || !string.Equals(manifest.Hash, existingManifestHash, StringComparison.Ordinal))
         {
-            var data = JsonSerializer.SerializeToUtf8Bytes(manifest, StaticWebAssetsJsonSerializerContext.RelaxedEscaping.StaticWebAssetsManifest);
+            // Only include endpoints for assets that are going to be available in production. We do the filtering
+            // inside the manifest because its cumbersome to do it in MSBuild directly.
+            if (StaticWebAssetsManifest.ManifestTypes.IsPublish(ManifestType))
+            {
+                var assetsByIdentity = assets.ToDictionary(a => a.Identity, a => a, OSPath.PathComparer);
+                var filteredEndpoints = new List<StaticWebAssetEndpoint>();
+
+                foreach (var endpoint in Endpoints.Select(e => StaticWebAssetEndpoint.FromTaskItem(e)))
+                {
+                    if (assetsByIdentity.ContainsKey(endpoint.AssetFile))
+                    {
+                        filteredEndpoints.Add(endpoint);
+                        Log.LogMessage(MessageImportance.Low, $"Accepted endpoint: Route='{endpoint.Route}', AssetFile='{endpoint.AssetFile}'");
+                    }
+                    else
+                    {
+                        Log.LogMessage(MessageImportance.Low, $"Filtered out endpoint: Endpoint='{endpoint.Route}' AssetFile='{endpoint.AssetFile}'");
+                    }
+                }
+
+                return filteredEndpoints;
+            }
+
+            return Endpoints.Select(StaticWebAssetEndpoint.FromTaskItem);
+        }
+
+        private void PersistManifest(StaticWebAssetsManifest manifest)
+        {
+            var data = JsonSerializer.SerializeToUtf8Bytes(manifest, ManifestSerializationOptions);
+            var fileExists = File.Exists(ManifestPath.ItemSpec);
+            var existingManifestHash = fileExists ? StaticWebAssetsManifest.FromJsonBytes(File.ReadAllBytes(ManifestPath.ItemSpec)).Hash : "";
+
             if (!fileExists)
             {
-                Log.LogMessage(MessageImportance.Low, $"Creating manifest because manifest file '{ManifestPath}' does not exist.");
+                Log.LogMessage(MessageImportance.Low, $"Creating manifest because manifest file '{ManifestPath.ItemSpec}' does not exist.");
+                File.WriteAllBytes(ManifestPath.ItemSpec, data);
+            }
+            else if (!string.Equals(manifest.Hash, existingManifestHash, StringComparison.Ordinal))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Updating manifest because manifest version '{manifest.Hash}' is different from existing manifest hash '{existingManifestHash}'.");
+                File.WriteAllBytes(ManifestPath.ItemSpec, data);
             }
             else
             {

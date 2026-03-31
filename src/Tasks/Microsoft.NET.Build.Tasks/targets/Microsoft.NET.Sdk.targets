@@ -228,9 +228,9 @@ Copyright (c) .NET Foundation. All rights reserved.
   <!-- NOTE: Keep in sync with https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.tasks -->
   <!-- `Condition="Exists(...)` is needed because the package might not be yet downloaded during restore in VS
         and we do not want to fail the restore phase because of that. -->
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(RoslynTasksAssembly)" Condition="Exists('$(RoslynTasksAssembly)')" />
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(RoslynTasksAssembly)" Condition="Exists('$(RoslynTasksAssembly)')" />
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(RoslynTasksAssembly)" Condition="Exists('$(RoslynTasksAssembly)')" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
 
   <ItemGroup Condition="'$(_NeedToDownloadMicrosoftNetSdkCompilersToolsetPackage)' == 'true'">
     <PackageDownload Include="Microsoft.Net.Sdk.Compilers.Toolset" Version="[$(NETCoreSdkVersion)]" />
@@ -1324,7 +1324,20 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ShouldBeValidatedAsExecutableReference>false</ShouldBeValidatedAsExecutableReference>
   </PropertyGroup>
 
-  <UsingTask TaskName="ValidateExecutableReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' And '$(ValidateExecutableReferencesMatchSelfContained)' == ''">
+    <!-- Don't generate an error if a test project references a self-contained Exe.  Test projects
+         use an OutputType of Exe but will usually call APIs in a referenced Exe rather than try
+         to run it. -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- Don't generate an error if an Exe project references a test project. -->
+    <ShouldBeValidatedAsExecutableReference>false</ShouldBeValidatedAsExecutableReference>
+  </PropertyGroup>
+
+
+  <UsingTask TaskName="ValidateExecutableReferences" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Static" />
 
   <PropertyGroup>
     <_UseAttributeForTargetFrameworkInfoPropertyNames Condition="$([MSBuild]::VersionGreaterThanOrEquals($(MSBuildVersion), '17.0'))">true</_UseAttributeForTargetFrameworkInfoPropertyNames>

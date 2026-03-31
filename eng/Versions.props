@@ -76,20 +76,85 @@
     <AspirePackageVersion>9.4.0</AspirePackageVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <!-- These are minimum versions used for netfx-targeted components that run in Visual Studio because in those cases,
-         Visual Studio is providing those assemblies, and we should work with whichever version it ships. -->
-    <MicrosoftBclAsyncInterfacesToolsetPackageVersion>9.0.0</MicrosoftBclAsyncInterfacesToolsetPackageVersion>
-    <MicrosoftDeploymentDotNetReleasesToolsetPackageVersion>2.0.0-preview.1.24427.4</MicrosoftDeploymentDotNetReleasesToolsetPackageVersion>
-    <MicrosoftExtensionsLoggingAbstractionsToolsetPackageVersion>9.0.0</MicrosoftExtensionsLoggingAbstractionsToolsetPackageVersion>
-    <SystemBuffersToolsetPackageVersion>4.5.1</SystemBuffersToolsetPackageVersion>
-    <SystemCollectionsImmutableToolsetPackageVersion>9.0.0</SystemCollectionsImmutableToolsetPackageVersion>
-    <SystemMemoryToolsetPackageVersion>4.5.5</SystemMemoryToolsetPackageVersion>
-    <SystemReflectionMetadataLoadContextToolsetPackageVersion>9.0.0</SystemReflectionMetadataLoadContextToolsetPackageVersion>
-    <SystemReflectionMetadataToolsetPackageVersion>9.0.0</SystemReflectionMetadataToolsetPackageVersion>
-    <SystemDiagnosticsDiagnosticSourceToolsetPackageVersion>9.0.0</SystemDiagnosticsDiagnosticSourceToolsetPackageVersion>
-    <SystemTextJsonToolsetPackageVersion>9.0.0</SystemTextJsonToolsetPackageVersion>
-    <SystemThreadingTasksExtensionsToolsetPackageVersion>4.5.4</SystemThreadingTasksExtensionsToolsetPackageVersion>
-    <SystemResourcesExtensionsToolsetPackageVersion>8.0.0</SystemResourcesExtensionsToolsetPackageVersion>
+    <!-- Dependency from https://github.com/dotnet/winforms -->
+    <MicrosoftDotnetWinFormsProjectTemplatesPackageVersion>9.0.4-servicing.25163.12</MicrosoftDotnetWinFormsProjectTemplatesPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Dependencies from https://github.com/dotnet/runtime -->
+    <MicrosoftNETCoreAppRefPackageVersion>9.0.4</MicrosoftNETCoreAppRefPackageVersion>
+    <VSRedistCommonNetCoreSharedFrameworkx6490PackageVersion>9.0.4-servicing.25163.5</VSRedistCommonNetCoreSharedFrameworkx6490PackageVersion>
+    <MicrosoftNETCoreAppRuntimewinx64PackageVersion>9.0.4</MicrosoftNETCoreAppRuntimewinx64PackageVersion>
+    <MicrosoftExtensionsDependencyModelPackageVersion>9.0.4</MicrosoftExtensionsDependencyModelPackageVersion>
+    <MicrosoftNETHostModelVersion>9.0.4-servicing.25163.5</MicrosoftNETHostModelVersion>
+    <MicrosoftExtensionsFileSystemGlobbingPackageVersion>9.0.4</MicrosoftExtensionsFileSystemGlobbingPackageVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>9.0.4</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftExtensionsLoggingConsoleVersion>9.0.4</MicrosoftExtensionsLoggingConsoleVersion>
+    <MicrosoftExtensionsLoggingVersion>9.0.4</MicrosoftExtensionsLoggingVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>9.0.4</MicrosoftNETILLinkTasksPackageVersion>
+    <SystemServiceProcessServiceControllerVersion>9.0.4</SystemServiceProcessServiceControllerVersion>
+    <MicrosoftNETCoreDotNetHostResolverPackageVersion>8.0.0-rc.1.23414.4</MicrosoftNETCoreDotNetHostResolverPackageVersion>
+    <MicrosoftNETCorePlatformsPackageVersion>9.0.4-servicing.25163.5</MicrosoftNETCorePlatformsPackageVersion>
+    <VSRedistCommonNetCoreTargetingPackx6490PackageVersion>9.0.4-servicing.25163.5</VSRedistCommonNetCoreTargetingPackx6490PackageVersion>
+    <MicrosoftNETCoreAppHostwinx64PackageVersion>9.0.4</MicrosoftNETCoreAppHostwinx64PackageVersion>
+    <MicrosoftBclAsyncInterfacesPackageVersion>9.0.4</MicrosoftBclAsyncInterfacesPackageVersion>
+    <MicrosoftExtensionsFileProvidersAbstractionsPackageVersion>9.0.4</MicrosoftExtensionsFileProvidersAbstractionsPackageVersion>
+    <MicrosoftWin32SystemEventsPackageVersion>9.0.4</MicrosoftWin32SystemEventsPackageVersion>
+    <NETStandardLibraryRefPackageVersion>2.1.0</NETStandardLibraryRefPackageVersion>
+    <SystemCodeDomPackageVersion>9.0.4</SystemCodeDomPackageVersion>
+    <SystemCollectionsImmutablePackageVersion>8.0.0</SystemCollectionsImmutablePackageVersion>
+    <SystemCompositionAttributedModelPackageVersion>9.0.4</SystemCompositionAttributedModelPackageVersion>
+    <SystemCompositionConventionPackageVersion>9.0.4</SystemCompositionConventionPackageVersion>
+    <SystemCompositionHostingPackageVersion>9.0.4</SystemCompositionHostingPackageVersion>
+    <SystemCompositionRuntimePackageVersion>9.0.4</SystemCompositionRuntimePackageVersion>
+    <SystemCompositionTypedPartsPackageVersion>9.0.4</SystemCompositionTypedPartsPackageVersion>
+    <SystemConfigurationConfigurationManagerPackageVersion>9.0.4</SystemConfigurationConfigurationManagerPackageVersion>
+    <SystemReflectionMetadataLoadContextVersion>9.0.4</SystemReflectionMetadataLoadContextVersion>
+    <SystemReflectionMetadataVersion>8.0.0</SystemReflectionMetadataVersion>
+    <SystemResourcesExtensionsPackageVersion>9.0.4</SystemResourcesExtensionsPackageVersion>
+    <SystemSecurityCryptographyPkcsPackageVersion>9.0.4</SystemSecurityCryptographyPkcsPackageVersion>
+    <SystemSecurityCryptographyProtectedDataPackageVersion>9.0.4</SystemSecurityCryptographyProtectedDataPackageVersion>
+    <SystemSecurityCryptographyXmlPackageVersion>9.0.4</SystemSecurityCryptographyXmlPackageVersion>
+    <SystemSecurityPermissionsPackageVersion>9.0.4</SystemSecurityPermissionsPackageVersion>
+    <SystemTextEncodingCodePagesPackageVersion>9.0.4</SystemTextEncodingCodePagesPackageVersion>
+    <SystemTextJsonPackageVersion>9.0.4</SystemTextJsonPackageVersion>
+    <!-- This is a minimum version for various projects to work. It's used for netfx-targeted components that run in Visual Studio
+         because in those cases, Visual Studio is providing System.Text.Json, and we should work with whichever version it ships. -->
+    <SystemTextJsonToolsetPackageVersion>8.0.4</SystemTextJsonToolsetPackageVersion>
+    <SystemWindowsExtensionsPackageVersion>9.0.4</SystemWindowsExtensionsPackageVersion>
+    <SystemFormatsAsn1Version>9.0.4</SystemFormatsAsn1Version>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Dependencies from https://github.com/dotnet/windowsdesktop -->
+    <VSRedistCommonWindowsDesktopSharedFrameworkx6490PackageVersion>9.0.4-servicing.25164.6</VSRedistCommonWindowsDesktopSharedFrameworkx6490PackageVersion>
+    <VSRedistCommonWindowsDesktopTargetingPackx6490PackageVersion>9.0.4-servicing.25164.6</VSRedistCommonWindowsDesktopTargetingPackx6490PackageVersion>
+    <MicrosoftWindowsDesktopAppRuntimewinx64PackageVersion>9.0.4</MicrosoftWindowsDesktopAppRuntimewinx64PackageVersion>
+    <MicrosoftWindowsDesktopAppRefPackageVersion>9.0.4</MicrosoftWindowsDesktopAppRefPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Dependencies from https://github.com/nuget/nuget.client -->
+    <NuGetBuildTasksPackageVersion>6.12.2-zlocal.32767</NuGetBuildTasksPackageVersion>
+    <NuGetBuildTasksConsolePackageVersion>6.12.2-zlocal.32767</NuGetBuildTasksConsolePackageVersion>
+    <NuGetLocalizationPackageVersion>6.13.1-rc.1</NuGetLocalizationPackageVersion>
+    <NuGetBuildTasksPackPackageVersion>6.12.2-zlocal.32767</NuGetBuildTasksPackPackageVersion>
+    <NuGetCommandLineXPlatPackageVersion>6.12.2-zlocal.32767</NuGetCommandLineXPlatPackageVersion>
+    <NuGetProjectModelPackageVersion>6.12.2-zlocal.32767</NuGetProjectModelPackageVersion>
+    <MicrosoftBuildNuGetSdkResolverPackageVersion>6.12.2-zlocal.32767</MicrosoftBuildNuGetSdkResolverPackageVersion>
+    <NuGetCommonPackageVersion>6.12.2-zlocal.32767</NuGetCommonPackageVersion>
+    <NuGetConfigurationPackageVersion>6.12.2-zlocal.32767</NuGetConfigurationPackageVersion>
+    <NuGetFrameworksPackageVersion>6.12.2-zlocal.32767</NuGetFrameworksPackageVersion>
+    <NuGetPackagingPackageVersion>6.12.2-zlocal.32767</NuGetPackagingPackageVersion>
+    <NuGetVersioningPackageVersion>6.12.2-zlocal.32767</NuGetVersioningPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Dependencies from https://github.com/Microsoft/vstest -->
+    <MicrosoftNETTestSdkPackageVersion>17.13.0-release-25073-05</MicrosoftNETTestSdkPackageVersion>
+    <MicrosoftTestPlatformCLIPackageVersion>17.13.0-release-25073-05</MicrosoftTestPlatformCLIPackageVersion>
+    <MicrosoftTestPlatformBuildPackageVersion>17.13.0-release-25073-05</MicrosoftTestPlatformBuildPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Dependencies from https://github.com/dotnet/roslyn-analyzers -->
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>9.0.0-preview.25123.1</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.25123.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Dependencies from https://github.com/Microsoft/msbuild -->
@@ -110,8 +175,10 @@
          At usage sites, either we use MicrosoftBuildMinimumVersion, or MicrosoftBuildVersion in source-only modes.
 
          Additionally, set the MinimumVSVersion for the installer UI that's required for targeting NetCurrent -->
-    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">17.14.28</MicrosoftBuildMinimumVersion>
-    <MinimumVSVersion>18.0</MinimumVSVersion>
+    <MicrosoftBuildVersion>17.13.20</MicrosoftBuildVersion>
+    <MicrosoftBuildLocalizationVersion>17.13.20-preview-25162-14</MicrosoftBuildLocalizationVersion>
+    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">17.13.20</MicrosoftBuildMinimumVersion>
+    <MinimumVSVersion>17.12</MinimumVSVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Dependencies from https://github.com/dotnet/emsdk -->

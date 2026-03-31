@@ -11,38 +11,41 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
 public class GenerateStaticWebAssetsPropsFile : Task
 {
-    private const string SourceType = "SourceType";
-    private const string SourceId = "SourceId";
-    private const string ContentRoot = "ContentRoot";
-    private const string BasePath = "BasePath";
-    private const string RelativePath = "RelativePath";
-    private const string AssetKind = "AssetKind";
-    private const string AssetMode = "AssetMode";
-    private const string AssetRole = "AssetRole";
-    private const string RelatedAsset = "RelatedAsset";
-    private const string AssetTraitName = "AssetTraitName";
-    private const string AssetTraitValue = "AssetTraitValue";
-    private const string Fingerprint = "Fingerprint";
-    private const string Integrity = "Integrity";
-    private const string CopyToOutputDirectory = "CopyToOutputDirectory";
-    private const string CopyToPublishDirectory = "CopyToPublishDirectory";
-    private const string OriginalItemSpec = "OriginalItemSpec";
-    private const string FileLength = "FileLength";
-    private const string LastWriteTime = "LastWriteTime";
-
-    [Required]
-    public string TargetPropsFilePath { get; set; }
-
-    [Required]
-    public ITaskItem[] StaticWebAssets { get; set; }
-
-    public string PackagePathPrefix { get; set; } = "staticwebassets";
-
-    public bool AllowEmptySourceType { get; set; }
-
-    public override bool Execute()
+    public class GenerateStaticWebAssetsPropsFile : Task, ITaskHybrid
     {
-        if (!ValidateArguments())
+        private const string SourceType = "SourceType";
+        private const string SourceId = "SourceId";
+        private const string ContentRoot = "ContentRoot";
+        private const string BasePath = "BasePath";
+        private const string RelativePath = "RelativePath";
+        private const string AssetKind = "AssetKind";
+        private const string AssetMode = "AssetMode";
+        private const string AssetRole = "AssetRole";
+        private const string RelatedAsset = "RelatedAsset";
+        private const string AssetTraitName = "AssetTraitName";
+        private const string AssetTraitValue = "AssetTraitValue";
+        private const string Fingerprint = "Fingerprint";
+        private const string Integrity = "Integrity";
+        private const string CopyToOutputDirectory = "CopyToOutputDirectory";
+        private const string CopyToPublishDirectory = "CopyToPublishDirectory";
+        private const string OriginalItemSpec = "OriginalItemSpec";
+
+
+        [Required]
+        [Output]
+        [PrecomputeOutput]
+        public ITaskItem TargetPropsFilePath { get; set; }
+
+        [Required]
+        public ITaskItem[] StaticWebAssets { get; set; }
+
+        public string PackagePathPrefix { get; set; } = "staticwebassets";
+
+        public bool AllowEmptySourceType { get; set; }
+
+        public bool ExecuteStatic() => true;
+
+        public override bool Execute()
         {
             return false;
         }
@@ -177,7 +180,78 @@ public class GenerateStaticWebAssetsPropsFile : Task
             if (!ValidateMetadataMatches(firstAsset, webAsset, SourceId) ||
                 !ValidateSourceType(webAsset, allowEmpty: AllowEmptySourceType))
             {
-                return false;
+                var asset = StaticWebAsset.FromTaskItem(element);
+                var packagePath = asset.ComputeTargetPath(PackagePathPrefix, '\\', tokenResolver);
+                var relativePath = asset.ReplaceTokens(asset.RelativePath, tokenResolver);
+                var fullPathExpression = @$"$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\{packagePath}'))";
+                itemGroup.Add(new XElement("StaticWebAsset",
+                    new XAttribute("Include", fullPathExpression),
+                    new XElement(SourceType, "Package"),
+                    new XElement(SourceId, element.GetMetadata(SourceId)),
+                    new XElement(ContentRoot, @$"$(MSBuildThisFileDirectory)..\{Normalize(PackagePathPrefix)}\"),
+                    new XElement(BasePath, element.GetMetadata(BasePath)),
+                    new XElement(RelativePath, relativePath),
+                    new XElement(AssetKind, element.GetMetadata(AssetKind)),
+                    new XElement(AssetMode, element.GetMetadata(AssetMode)),
+                    new XElement(AssetRole, element.GetMetadata(AssetRole)),
+                    new XElement(RelatedAsset, element.GetMetadata(RelatedAsset)),
+                    new XElement(AssetTraitName, element.GetMetadata(AssetTraitName)),
+                    new XElement(AssetTraitValue, element.GetMetadata(AssetTraitValue)),
+                    new XElement(Fingerprint, element.GetMetadata(Fingerprint)),
+                    new XElement(Integrity, element.GetMetadata(Integrity)),
+                    new XElement(CopyToOutputDirectory, element.GetMetadata(CopyToOutputDirectory)),
+                    new XElement(CopyToPublishDirectory, element.GetMetadata(CopyToPublishDirectory)),
+                    new XElement(OriginalItemSpec, fullPathExpression)));
+            }
+
+            var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"));
+            var root = new XElement("Project", itemGroup);
+
+            document.Add(root);
+
+            var settings = new XmlWriterSettings
+            {
+                Encoding = Encoding.UTF8,
+                CloseOutput = false,
+                OmitXmlDeclaration = true,
+                Indent = true,
+                NewLineOnAttributes = false,
+                Async = true
+            };
+
+            using var memoryStream = new MemoryStream();
+            using (var xmlWriter = XmlWriter.Create(memoryStream, settings))
+            {
+                document.WriteTo(xmlWriter);
+            }
+
+            var data = memoryStream.ToArray();
+            WriteFile(data);
+
+            return !Log.HasLoggedErrors;
+
+            static string Normalize(string relativePath) => relativePath.Replace("/", "\\").TrimStart('\\');
+        }
+
+        private void WriteFile(byte[] data)
+        {
+            var dataHash = ComputeHash(data);
+            var fileExists = File.Exists(TargetPropsFilePath.ItemSpec);
+            var existingFileHash = fileExists ? ComputeHash(File.ReadAllBytes(TargetPropsFilePath.ItemSpec)) : "";
+
+            if (!fileExists)
+            {
+                Log.LogMessage(MessageImportance.Low, $"Creating file '{TargetPropsFilePath.ItemSpec}' does not exist.");
+                File.WriteAllBytes(TargetPropsFilePath.ItemSpec, data);
+            }
+            else if (!string.Equals(dataHash, existingFileHash, StringComparison.Ordinal))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Updating '{TargetPropsFilePath.ItemSpec}' file because the hash '{dataHash}' is different from existing file hash '{existingFileHash}'.");
+                File.WriteAllBytes(TargetPropsFilePath.ItemSpec, data);
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.Low, $"Skipping file update because the hash '{dataHash}' has not changed.");
             }
         }
 
@@ -189,6 +263,47 @@ public class GenerateStaticWebAssetsPropsFile : Task
         var candidateMetadata = candidate.GetMetadata(SourceType);
         if (allowEmpty && string.IsNullOrEmpty(candidateMetadata))
         {
+            using var sha256 = SHA256.Create();
+
+            var result = sha256.ComputeHash(data);
+            return Convert.ToBase64String(result);
+        }
+
+        private XmlWriter GetXmlWriter(XmlWriterSettings settings)
+        {
+            var fileStream = new FileStream(TargetPropsFilePath.ItemSpec, FileMode.Create);
+            return XmlWriter.Create(fileStream, settings);
+        }
+
+        private bool ValidateArguments()
+        {
+            ITaskItem firstAsset = null;
+
+            for (var i = 0; i < StaticWebAssets.Length; i++)
+            {
+                var webAsset = StaticWebAssets[i];
+                if (!EnsureRequiredMetadata(webAsset, SourceId) ||
+                    !EnsureRequiredMetadata(webAsset, SourceType, allowEmpty: AllowEmptySourceType) ||
+                    !EnsureRequiredMetadata(webAsset, ContentRoot) ||
+                    !EnsureRequiredMetadata(webAsset, BasePath) ||
+                    !EnsureRequiredMetadata(webAsset, RelativePath))
+                {
+                    return false;
+                }
+
+                if (firstAsset == null)
+                {
+                    firstAsset = webAsset;
+                    continue;
+                }
+
+                if (!ValidateMetadataMatches(firstAsset, webAsset, SourceId) ||
+                    !ValidateSourceType(webAsset, allowEmpty: AllowEmptySourceType))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 

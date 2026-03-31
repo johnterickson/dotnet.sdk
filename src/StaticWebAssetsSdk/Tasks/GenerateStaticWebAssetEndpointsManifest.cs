@@ -28,12 +28,6 @@ public class GenerateStaticWebAssetEndpointsManifest : Task, ITaskHybrid
 
     public bool ExecuteStatic() => true;
 
-    public string CacheFilePath { get; set; }
-
-    public string ExclusionPatterns { get; set; }
-
-    public string ExclusionPatternsCacheFilePath { get; set; }
-
     public override bool Execute()
     {
         var (patternString, parsedPatterns) = ParseAndSortPatterns(ExclusionPatterns);
@@ -132,7 +126,7 @@ public class GenerateStaticWebAssetEndpointsManifest : Task, ITaskHybrid
                 Endpoints = [.. filteredEndpoints]
             };
 
-            this.PersistFileIfChanged(manifest, ManifestPath, StaticWebAssetsJsonSerializerContext.RelaxedEscaping.StaticWebAssetEndpointsManifest);
+            this.PersistFileIfChanged(manifest, ManifestPath.ItemSpec);
         }
         catch (Exception ex)
         {

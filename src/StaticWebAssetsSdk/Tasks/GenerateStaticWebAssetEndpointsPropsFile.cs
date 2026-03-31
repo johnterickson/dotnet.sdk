@@ -11,22 +11,24 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
 public class GenerateStaticWebAssetEndpointsPropsFile : Task
 {
-    [Required]
-    public string TargetPropsFilePath { get; set; }
-
-    public string PackagePathPrefix { get; set; } = "staticwebassets";
-
-    [Required]
-    public ITaskItem[] StaticWebAssets { get; set; }
-
-    [Required]
-    public ITaskItem[] StaticWebAssetEndpoints { get; set; }
-
-    public override bool Execute()
+    public class GenerateStaticWebAssetEndpointsPropsFile : Task, ITaskHybrid
     {
-        var endpoints = StaticWebAssetEndpoint.FromItemGroup(StaticWebAssetEndpoints);
-        var assets = StaticWebAsset.ToAssetDictionary(StaticWebAssets);
-        if (!ValidateArguments(endpoints, assets))
+        [Required]
+        [Output]
+        [PrecomputeOutput]
+        public ITaskItem TargetPropsFilePath { get; set; }
+
+        public string PackagePathPrefix { get; set; } = "staticwebassets";
+
+        [Required]
+        public ITaskItem[] StaticWebAssets { get; set; }
+
+        [Required]
+        public ITaskItem[] StaticWebAssetEndpoints { get; set; }
+
+        public bool ExecuteStatic() => true;
+
+        public override bool Execute()
         {
             return false;
         }
@@ -41,22 +43,26 @@ public class GenerateStaticWebAssetEndpointsPropsFile : Task
             return !Log.HasLoggedErrors;
         }
 
-        var itemGroup = new XElement("ItemGroup");
-        var orderedAssets = endpoints.OrderBy(e => e.Route, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(e => e.AssetFile, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var element in orderedAssets)
+        private void WriteFile(byte[] data)
         {
-            var asset = assets[element.AssetFile];
-            var path = asset.ReplaceTokens(asset.RelativePath, StaticWebAssetTokenResolver.Instance);
-            var fullPathExpression = $"""$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\{StaticWebAsset.Normalize(PackagePathPrefix)}\{StaticWebAsset.Normalize(path).Replace("/", "\\")}'))""";
+            var dataHash = ComputeHash(data);
+            var fileExists = File.Exists(TargetPropsFilePath.ItemSpec);
+            var existingFileHash = fileExists ? ComputeHash(File.ReadAllBytes(TargetPropsFilePath.ItemSpec)) : "";
 
-            itemGroup.Add(new XElement(nameof(StaticWebAssetEndpoint),
-                new XAttribute("Include", element.Route),
-                new XElement(nameof(StaticWebAssetEndpoint.AssetFile), fullPathExpression),
-                new XElement(nameof(StaticWebAssetEndpoint.Selectors), new XCData(StaticWebAssetEndpointSelector.ToMetadataValue(element.Selectors))),
-                new XElement(nameof(StaticWebAssetEndpoint.EndpointProperties), new XCData(StaticWebAssetEndpointProperty.ToMetadataValue(element.EndpointProperties))),
-                new XElement(nameof(StaticWebAssetEndpoint.ResponseHeaders), new XCData(StaticWebAssetEndpointResponseHeader.ToMetadataValue(element.ResponseHeaders)))));
+            if (!fileExists)
+            {
+                Log.LogMessage(MessageImportance.Low, $"Creating file '{TargetPropsFilePath.ItemSpec}' does not exist.");
+                File.WriteAllBytes(TargetPropsFilePath.ItemSpec, data);
+            }
+            else if (!string.Equals(dataHash, existingFileHash, StringComparison.Ordinal))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Updating '{TargetPropsFilePath.ItemSpec}' file because the hash '{dataHash}' is different from existing file hash '{existingFileHash}'.");
+                File.WriteAllBytes(TargetPropsFilePath.ItemSpec, data);
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.Low, $"Skipping file update because the hash '{dataHash}' has not changed.");
+            }
         }
 
         var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"));

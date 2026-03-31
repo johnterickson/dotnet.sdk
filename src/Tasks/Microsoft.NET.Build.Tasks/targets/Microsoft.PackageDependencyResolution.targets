@@ -178,8 +178,9 @@ Copyright (c) .NET Foundation. All rights reserved.
            AssemblyFile="$(MicrosoftNETBuildTasksAssembly)"
            PrecomputationMode="Static" />
   <UsingTask TaskName="Microsoft.NET.Build.Tasks.ResolvePackageAssets"
-            AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
-
+            AssemblyFile="$(MicrosoftNETBuildTasksAssembly)"
+            PrecomputationMode="Static" />
+  
   <!-- The condition on this target causes it to be skipped during design-time builds if
         the restore operation hasn't run yet.  This is to avoid displaying an error in
         the Visual Studio error list when a project is created before NuGet restore has

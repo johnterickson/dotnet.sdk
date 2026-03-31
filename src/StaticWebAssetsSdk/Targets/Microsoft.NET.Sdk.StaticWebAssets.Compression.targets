@@ -224,12 +224,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
 <!-- Build -->
 
-  <Target Name="ResolveBuildCompressedStaticWebAssets" DependsOnTargets="$(ResolveBuildCompressedStaticWebAssetsDependsOn)">
-
-    <PropertyGroup>
-      <_ResolveBuildCompressedStaticWebAssetsCachePath Condition="'$(StaticWebAssetsCacheDefineStaticWebAssetsEnabled)' == 'true'">$(_StaticWebAssetsManifestBase)rbcswa.dswa.cache.json</_ResolveBuildCompressedStaticWebAssetsCachePath>
-    </PropertyGroup>
-
+  <Target Name="ResolveBuildCompressedStaticWebAssets" DependsOnTargets="$(ResolveBuildCompressedStaticWebAssetsDependsOn)"
+    Deferred="Item:_CompressionBuildStaticWebAssetResolved:w;Item:_CompressionBuildStaticWebAssetEndpoint:w;Item:_UpdatedCompressionBuildEndpoints:w;Item:StaticWebAssetEndpoint:w">
     <DefineStaticWebAssets
       CandidateAssets="@(_CompressedStaticWebAssets)"
       CacheManifestPath="$(_ResolveBuildCompressedStaticWebAssetsCachePath)"
@@ -242,7 +238,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ResolveStaticWebAssetFingerprints>
 
     <DefineStaticWebAssetEndpoints
-      CandidateAssets="@(_CompressionBuildStaticWebAsset);@(_PrecompressedStaticWebAssets)"
+      CandidateAssets="@(_CompressionBuildStaticWebAssetResolved);@(_PrecompressedStaticWebAssets)"
+      ExistingEndpoints="@(StaticWebAssetEndpoint)"
       ContentTypeMappings="@(StaticWebAssetContentTypeMapping)"
     >
       <Output TaskParameter="Endpoints" ItemName="_CompressionBuildStaticWebAssetEndpoint" />
