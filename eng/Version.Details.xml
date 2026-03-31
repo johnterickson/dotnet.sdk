@@ -72,11 +72,11 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>645374ace1c8bbeb07aac743552acc62bbb2c34b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build" Version="18.0.11">
+    <Dependency Name="Microsoft.Build" Version="18.3.0-dev-26180-01">
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>645374ace1c8bbeb07aac743552acc62bbb2c34b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Localization" Version="18.0.11-servicing-26174-113">
+    <Dependency Name="Microsoft.Build.Localization" Version="18.3.0-dev-26180-01">
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>645374ace1c8bbeb07aac743552acc62bbb2c34b</Sha>
     </Dependency>
