@@ -132,18 +132,18 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- Dependencies from https://github.com/nuget/nuget.client -->
-    <NuGetBuildTasksPackageVersion>6.12.2-zlocal.32767</NuGetBuildTasksPackageVersion>
-    <NuGetBuildTasksConsolePackageVersion>6.12.2-zlocal.32767</NuGetBuildTasksConsolePackageVersion>
+    <NuGetBuildTasksPackageVersion>7.4.0-zlocal.65534</NuGetBuildTasksPackageVersion>
+    <NuGetBuildTasksConsolePackageVersion>7.4.0-zlocal.65534</NuGetBuildTasksConsolePackageVersion>
     <NuGetLocalizationPackageVersion>6.13.1-rc.1</NuGetLocalizationPackageVersion>
-    <NuGetBuildTasksPackPackageVersion>6.12.2-zlocal.32767</NuGetBuildTasksPackPackageVersion>
-    <NuGetCommandLineXPlatPackageVersion>6.12.2-zlocal.32767</NuGetCommandLineXPlatPackageVersion>
-    <NuGetProjectModelPackageVersion>6.12.2-zlocal.32767</NuGetProjectModelPackageVersion>
-    <MicrosoftBuildNuGetSdkResolverPackageVersion>6.12.2-zlocal.32767</MicrosoftBuildNuGetSdkResolverPackageVersion>
-    <NuGetCommonPackageVersion>6.12.2-zlocal.32767</NuGetCommonPackageVersion>
-    <NuGetConfigurationPackageVersion>6.12.2-zlocal.32767</NuGetConfigurationPackageVersion>
-    <NuGetFrameworksPackageVersion>6.12.2-zlocal.32767</NuGetFrameworksPackageVersion>
-    <NuGetPackagingPackageVersion>6.12.2-zlocal.32767</NuGetPackagingPackageVersion>
-    <NuGetVersioningPackageVersion>6.12.2-zlocal.32767</NuGetVersioningPackageVersion>
+    <NuGetBuildTasksPackPackageVersion>7.4.0-zlocal.65534</NuGetBuildTasksPackPackageVersion>
+    <NuGetCommandLineXPlatPackageVersion>7.4.0-zlocal.65534</NuGetCommandLineXPlatPackageVersion>
+    <NuGetProjectModelPackageVersion>7.4.0-zlocal.65534</NuGetProjectModelPackageVersion>
+    <MicrosoftBuildNuGetSdkResolverPackageVersion>7.4.0-zlocal.65534</MicrosoftBuildNuGetSdkResolverPackageVersion>
+    <NuGetCommonPackageVersion>7.4.0-zlocal.65534</NuGetCommonPackageVersion>
+    <NuGetConfigurationPackageVersion>7.4.0-zlocal.65534</NuGetConfigurationPackageVersion>
+    <NuGetFrameworksPackageVersion>7.4.0-zlocal.65534</NuGetFrameworksPackageVersion>
+    <NuGetPackagingPackageVersion>7.4.0-zlocal.65534</NuGetPackagingPackageVersion>
+    <NuGetVersioningPackageVersion>7.4.0-zlocal.65534</NuGetVersioningPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Dependencies from https://github.com/Microsoft/vstest -->
@@ -175,9 +175,9 @@
          At usage sites, either we use MicrosoftBuildMinimumVersion, or MicrosoftBuildVersion in source-only modes.
 
          Additionally, set the MinimumVSVersion for the installer UI that's required for targeting NetCurrent -->
-    <MicrosoftBuildVersion>17.13.20</MicrosoftBuildVersion>
-    <MicrosoftBuildLocalizationVersion>17.13.20-preview-25162-14</MicrosoftBuildLocalizationVersion>
-    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">17.13.20</MicrosoftBuildMinimumVersion>
+    <MicrosoftBuildVersion>18.3.0-dev-26180-01</MicrosoftBuildVersion>
+    <MicrosoftBuildLocalizationVersion>18.3.0-dev-26180-01</MicrosoftBuildLocalizationVersion>
+    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">18.3.0-dev-26180-01</MicrosoftBuildMinimumVersion>
     <MinimumVSVersion>17.12</MinimumVSVersion>
   </PropertyGroup>
   <PropertyGroup>
