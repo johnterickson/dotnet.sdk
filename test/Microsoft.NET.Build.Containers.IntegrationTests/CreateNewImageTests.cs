@@ -20,7 +20,7 @@ public class CreateNewImageTests
         _testOutput = testOutput;
     }
 
-    [DockerAvailableFact]
+    [DockerAvailableFact(Skip = "https://github.com/dotnet/sdk/issues/49300")]
     public void CreateNewImage_Baseline()
     {
         DirectoryInfo newProjectDir = new(GetTestDirectoryName());
@@ -70,7 +70,7 @@ public class CreateNewImageTests
         return new(task.GeneratedContainerConfiguration);
     }
 
-    [DockerAvailableFact]
+    [DockerAvailableFact(Skip = "https://github.com/dotnet/sdk/issues/49300")]
     public void ParseContainerProperties_EndToEnd()
     {
         DirectoryInfo newProjectDir = new(GetTestDirectoryName());
@@ -133,7 +133,8 @@ public class CreateNewImageTests
     /// <summary>
     /// Creates a console app that outputs the environment variable added to the image.
     /// </summary>
-    [DockerAvailableFact()]
+
+    [DockerAvailableFact(Skip = "https://github.com/dotnet/sdk/issues/49300")]
     public void Tasks_EndToEnd_With_EnvironmentVariable_Validation()
     {
         DirectoryInfo newProjectDir = new(GetTestDirectoryName());
@@ -150,6 +151,8 @@ public class CreateNewImageTests
             .WithWorkingDirectory(newProjectDir.FullName)
             .Execute()
             .Should().Pass();
+
+        EndToEndTests.ChangeTargetFrameworkAfterAppCreation(newProjectDir.FullName);
 
         File.WriteAllText(Path.Combine(newProjectDir.FullName, "Program.cs"), $"Console.Write(Environment.GetEnvironmentVariable(\"GoodEnvVar\"));");
 
@@ -191,7 +194,7 @@ public class CreateNewImageTests
         cni.BaseImageTag = pcp.ParsedContainerTag;
         cni.Repository = pcp.NewContainerRepository;
         cni.OutputRegistry = pcp.NewContainerRegistry;
-        cni.PublishDirectory = Path.Combine(newProjectDir.FullName, "bin", "release", ToolsetInfo.CurrentTargetFramework, "linux-x64");
+        cni.PublishDirectory = Path.Combine(newProjectDir.FullName, "bin", "release", EndToEndTests._oldFramework, "linux-x64");
         cni.WorkingDirectory = "/app";
         cni.Entrypoint = new TaskItem[] { new($"/app/{newProjectDir.Name}") };
         cni.ImageTags = pcp.NewContainerTags;
@@ -216,7 +219,7 @@ public class CreateNewImageTests
             .And.HaveStdOut("Foo");
     }
 
-    [DockerAvailableFact]
+    [DockerAvailableFact(Skip = "https://github.com/dotnet/sdk/issues/49300")]
     public async System.Threading.Tasks.Task CreateNewImage_RootlessBaseImage()
     {
         const string RootlessBase = "dotnet/rootlessbase";
@@ -297,7 +300,7 @@ public class CreateNewImageTests
     }
 
 
-    [DockerAvailableFact]
+    [DockerAvailableFact(Skip = "https://github.com/dotnet/sdk/issues/49502")]
     public void CanOverrideContainerImageFormat()
     {
         DirectoryInfo newProjectDir = new(GetTestDirectoryName());

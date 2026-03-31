@@ -1,17 +1,24 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Diagnostics;
 using System.IO.Pipes;
-using Microsoft.DotNet.Watch;
+using System.Reflection;
+using System.Runtime.Loader;
 using Microsoft.DotNet.HotReload;
+using Microsoft.DotNet.Watch;
 
 /// <summary>
 /// The runtime startup hook looks for top-level type named "StartupHook".
 /// </summary>
 internal sealed class StartupHook
 {
-    private static readonly bool s_logToStandardOutput = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.HotReloadDeltaClientLogMessages) == "1";
-    private static readonly string s_namedPipeName = Environment.GetEnvironmentVariable(EnvironmentVariables.Names.DotnetWatchHotReloadNamedPipeName);
+    private static readonly string? s_standardOutputLogPrefix = Environment.GetEnvironmentVariable(AgentEnvironmentVariables.HotReloadDeltaClientLogMessages);
+    private static readonly string? s_namedPipeName = Environment.GetEnvironmentVariable(AgentEnvironmentVariables.DotNetWatchHotReloadNamedPipeName);
+
+#if NET10_0_OR_GREATER
+    private static PosixSignalRegistration? s_signalRegistration;
+#endif
 
     /// <summary>
     /// Invoked by the runtime when the containing assembly is listed in DOTNET_STARTUP_HOOKS.
@@ -19,120 +26,105 @@ internal sealed class StartupHook
     public static void Initialize()
     {
         var processPath = Environment.GetCommandLineArgs().FirstOrDefault();
+        var processDir = Path.GetDirectoryName(processPath)!;
 
-        Log($"Loaded into process: {processPath}");
+        Log($"Loaded into process: {processPath} ({typeof(StartupHook).Assembly.Location})");
 
-        ClearHotReloadEnvironmentVariables();
+        HotReloadAgent.ClearHotReloadEnvironmentVariables(typeof(StartupHook));
 
-        _ = Task.Run(async () =>
+        if (string.IsNullOrEmpty(s_namedPipeName))
         {
-            Log($"Connecting to hot-reload server");
+            Log($"Environment variable {AgentEnvironmentVariables.DotNetWatchHotReloadNamedPipeName} has no value");
+            return;
+        }
 
-            const int TimeOutMS = 5000;
+        RegisterSignalHandlers();
 
-            using var pipeClient = new NamedPipeClientStream(".", s_namedPipeName, PipeDirection.InOut, PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous);
-            try
+        PipeListener? listener = null;
+
+        var agent = new HotReloadAgent(
+            assemblyResolvingHandler: (_, args) =>
             {
-                await pipeClient.ConnectAsync(TimeOutMS);
-                Log("Connected.");
-            }
-            catch (TimeoutException)
+                Log($"Resolving '{args.Name}, Version={args.Version}'");
+                var path = Path.Combine(processDir, args.Name + ".dll");
+                return File.Exists(path) ? AssemblyLoadContext.Default.LoadFromAssemblyPath(path) : null;
+            },
+            hotReloadExceptionCreateHandler: (code, message) =>
             {
-                Log($"Failed to connect in {TimeOutMS}ms.");
-                return;
-            }
-
-            using var agent = new HotReloadAgent();
-            try
-            {
-                agent.Reporter.Report("Writing capabilities: " + agent.Capabilities, AgentMessageSeverity.Verbose);
-
-                var initPayload = new ClientInitializationRequest(agent.Capabilities);
-                await initPayload.WriteAsync(pipeClient, CancellationToken.None);
-
-                while (pipeClient.IsConnected)
+                // Continue executing the code if the debugger is attached.
+                // It will throw the exception and the debugger will handle it.
+                if (Debugger.IsAttached)
                 {
-                    var update = await ManagedCodeUpdateRequest.ReadAsync(pipeClient, CancellationToken.None);
-                    Log($"ResponseLoggingLevel = {update.ResponseLoggingLevel}");
+                    return;
+                }
 
-                    bool success;
+                Debug.Assert(listener != null);
+                Log($"Runtime rude edit detected: '{message}'");
+
+                SendAndForgetAsync().Wait();
+
+                // Handle Ctrl+C to terminate gracefully:
+                Console.CancelKeyPress += (_, _) => Environment.Exit(0);
+
+                // wait for the process to be terminated by the Hot Reload client (other threads might still execute):
+                Thread.Sleep(Timeout.Infinite);
+
+                async Task SendAndForgetAsync()
+                {
                     try
                     {
-                        agent.ApplyDeltas(update.Deltas);
-                        success = true;
+                        await listener.SendResponseAsync(new HotReloadExceptionCreatedNotification(code, message), CancellationToken.None);
                     }
-                    catch (Exception e)
+                    catch
                     {
-                        agent.Reporter.Report($"The runtime failed to applying the change: {e.Message}", AgentMessageSeverity.Error);
-                        agent.Reporter.Report("Further changes won't be applied to this process.", AgentMessageSeverity.Warning);
-                        success = false;
+                        // do not crash the app
                     }
-
-                    var logEntries = agent.GetAndClearLogEntries(update.ResponseLoggingLevel);
-
-                    var response = new UpdateResponse(logEntries, success);
-                    await response.WriteAsync(pipeClient, CancellationToken.None);
                 }
-            }
-            catch (Exception e)
+            });
+
+        listener = new PipeListener(s_namedPipeName, agent, Log);
+
+        // fire and forget:
+        _ = listener.Listen(CancellationToken.None);
+    }
+
+    private static void RegisterSignalHandlers()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            ProcessUtilities.EnableWindowsCtrlCHandling(Log);
+        }
+        else
+        {
+#if NET10_0_OR_GREATER
+            // Register a handler for SIGTERM to allow graceful shutdown of the application on Unix.
+            // See https://github.com/dotnet/docs/issues/46226.
+
+            // Note: registered handlers are executed in reverse order of their registration.
+            // Since the startup hook is executed before any code of the application, it is the first handler registered and thus the last to run.
+
+            s_signalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, context =>
             {
-                Log(e.ToString());
-            }
+                Log($"SIGTERM received. Cancel={context.Cancel}");
 
-            Log("Stopped received delta updates. Server is no longer connected.");
-        });
-    }
+                if (!context.Cancel)
+                {
+                    Environment.Exit(0);
+                }
+            });
 
-    public static bool IsMatchingProcess(string processPath, string targetProcessPath)
-    {
-        var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        var (shorter, longer) = (processPath.Length > targetProcessPath.Length) ? (targetProcessPath, processPath) : (processPath, targetProcessPath);
-
-        // one or both have no extension, or they have the same extension
-        if (longer.StartsWith(shorter, comparison))
-        {
-            var suffix = longer[shorter.Length..];
-            return suffix is "" || suffix.Equals(".exe", comparison) || suffix.Equals(".dll", comparison);
+            Log("Posix signal handlers registered.");
+#endif
         }
-
-        // different extension:
-        return (processPath.EndsWith(".exe", comparison) || processPath.EndsWith(".dll", comparison)) &&
-               (targetProcessPath.EndsWith(".exe", comparison) || targetProcessPath.EndsWith(".dll", comparison)) &&
-               string.Equals(processPath[..^4], targetProcessPath[..^4], comparison);
-    }
-
-    internal static void ClearHotReloadEnvironmentVariables()
-    {
-        // Clear any hot-reload specific environment variables. This prevents child processes from being
-        // affected by the current app's hot reload settings. See https://github.com/dotnet/runtime/issues/58000
-
-        Environment.SetEnvironmentVariable(EnvironmentVariables.Names.DotnetStartupHooks,
-            RemoveCurrentAssembly(Environment.GetEnvironmentVariable(EnvironmentVariables.Names.DotnetStartupHooks)));
-
-        Environment.SetEnvironmentVariable(EnvironmentVariables.Names.DotnetWatchHotReloadNamedPipeName, "");
-        Environment.SetEnvironmentVariable(EnvironmentVariables.Names.HotReloadDeltaClientLogMessages, "");
-    }
-
-    internal static string RemoveCurrentAssembly(string environment)
-    {
-        if (environment is "")
-        {
-            return environment;
-        }
-
-        var assemblyLocation = typeof(StartupHook).Assembly.Location;
-        var updatedValues = environment.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
-            .Where(e => !string.Equals(e, assemblyLocation, StringComparison.OrdinalIgnoreCase));
-
-        return string.Join(Path.PathSeparator, updatedValues);
     }
 
     private static void Log(string message)
     {
-        if (s_logToStandardOutput)
+        var prefix = s_standardOutputLogPrefix;
+        if (!string.IsNullOrEmpty(prefix))
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"dotnet watch 🕵️ [{s_namedPipeName}] {message}");
+            Console.Error.WriteLine($"{prefix} {message}");
             Console.ResetColor();
         }
     }

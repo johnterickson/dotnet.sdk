@@ -1,20 +1,14 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Build.Graph;
+using Microsoft.DotNet.HotReload;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Watch
 {
-    internal sealed class StaticFileHandler(IReporter reporter, ProjectNodeMap projectMap, BrowserConnector browserConnector)
+    internal sealed class StaticFileHandler(ILogger logger, ProjectNodeMap projectMap, BrowserRefreshServerFactory browserConnector)
     {
-        private static readonly JsonSerializerOptions s_jsonSerializerOptions = new(JsonSerializerDefaults.Web)
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        };
-
         public async ValueTask<bool> HandleFileChangesAsync(IReadOnlyList<ChangedFile> files, CancellationToken cancellationToken)
         {
             var allFilesHandled = true;
@@ -31,14 +25,14 @@ namespace Microsoft.DotNet.Watch
                     continue;
                 }
 
-                reporter.Verbose($"Handling file change event for static content {file.FilePath}.");
+                logger.LogDebug("Handling file change event for static content {FilePath}.", file.FilePath);
 
                 foreach (var containingProjectPath in file.ContainingProjectPaths)
                 {
                     if (!projectMap.Map.TryGetValue(containingProjectPath, out var projectNodes))
                     {
                         // Shouldn't happen.
-                        reporter.Warn($"Project '{containingProjectPath}' not found in the project graph.");
+                        logger.LogWarning("Project '{Path}' not found in the project graph.", containingProjectPath);
                         return allFilesHandled;
                     }
 
@@ -48,7 +42,7 @@ namespace Microsoft.DotNet.Watch
                         {
                             if (!refreshRequests.TryGetValue(refreshServer, out var filesPerServer))
                             {
-                                reporter.Verbose($"[{projectNode.GetDisplayName()}] Refreshing browser.");
+                                logger.LogDebug("[{ProjectName}] Refreshing browser.", projectNode.GetDisplayName());
                                 refreshRequests.Add(refreshServer, filesPerServer = []);
                             }
 
@@ -56,7 +50,7 @@ namespace Microsoft.DotNet.Watch
                         }
                         else if (projectsWithoutRefreshServer.Add(projectNode))
                         {
-                            reporter.Verbose($"[{projectNode.GetDisplayName()}] No refresh server.");
+                            logger.LogDebug("[{ProjectName}] No refresh server.", projectNode.GetDisplayName());
                         }
                     }
                 }
@@ -67,20 +61,11 @@ namespace Microsoft.DotNet.Watch
                 return allFilesHandled;
             }
 
-            var tasks = refreshRequests.Select(async request =>
-            {
-                // Serialize all requests sent to a single server:
-                foreach (var path in request.Value)
-                {
-                    reporter.Verbose($"Sending static file update request for asset '{path}'.");
-                    var message = JsonSerializer.SerializeToUtf8Bytes(new UpdateStaticFileMessage { Path = path }, s_jsonSerializerOptions);
-                    await request.Key.SendAsync(message, cancellationToken);
-                }
-            });
+            var tasks = refreshRequests.Select(request => request.Key.UpdateStaticAssetsAsync(request.Value, cancellationToken).AsTask());
 
             await Task.WhenAll(tasks).WaitAsync(cancellationToken);
 
-            reporter.Output("Hot Reload of static files succeeded.", emoji: "🔥");
+            logger.Log(MessageDescriptor.HotReloadOfStaticAssetsSucceeded);
 
             return allFilesHandled;
         }

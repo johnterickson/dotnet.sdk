@@ -222,6 +222,7 @@ Copyright (c) .NET Foundation. All rights reserved.
         Patterns="@(_CachedBuildStaticWebAssetDiscoveryPatterns)"
         ProjectMode="$(StaticWebAssetProjectMode)"
         AssetKind="Build"
+        MakeReferencedAssetOriginalItemSpecAbsolute="$(StaticWebAssetMakeReferencedAssetOriginalItemSpecAbsolute)"
         Source="$(PackageId)"
       >
         <Output TaskParameter="StaticWebAssets" ItemName="_CachedBuildReferencedStaticWebAsset" />
@@ -247,8 +248,37 @@ Copyright (c) .NET Foundation. All rights reserved.
       </ItemGroup>
   </Target>
 
-  <Target Name="GetCurrentProjectBuildStaticWebAssetItemsDeferred" DependsOnTargets="LoadCurrentProjectBuildStaticWebAssetItemsForReference" Returns="@(_CachedBuildStaticWebAssetItemsDeferred)" DeferredReturns="Item:_CachedBuildStaticWebAssetItemsDeferred"
-    Deferred="Item:_CachedBuildStaticWebAssetsResolved:r;Item:_CachedBuildReferencedStaticWebAssetEndpoints:r">
+  <Target Name="GetCurrentProjectPublishStaticWebAssetItems" DependsOnTargets="ResolveStaticWebAssetsConfiguration" Returns="@(_CachedPublishStaticWebAssetItems)">
+
+      <PropertyGroup>
+        <_ShouldReadPublishManifestAndUpdateItemGroup>false</_ShouldReadPublishManifestAndUpdateItemGroup>
+        <_ShouldReadPublishManifestAndUpdateItemGroup Condition="@(_CachedPublishStaticWebAssets) == '' and @(_CachedPublishStaticWebAssetEndpoints) == '' and @(_CachedPublishStaticWebAssetDiscoveryPatterns) == ''">true</_ShouldReadPublishManifestAndUpdateItemGroup>
+      </PropertyGroup>
+
+      <ReadStaticWebAssetsManifestFile ManifestPath="$(StaticWebAssetPublishManifestPath)"
+        Condition="'$(_ShouldReadPublishManifestAndUpdateItemGroup)' == 'true'">
+        <Output TaskParameter="Assets" ItemName="_CachedPublishStaticWebAssets" />
+        <Output TaskParameter="Endpoints" ItemName="_CachedPublishStaticWebAssetEndpoints" />
+        <Output TaskParameter="DiscoveryPatterns" ItemName="_CachedPublishStaticWebAssetDiscoveryPatterns" />
+      </ReadStaticWebAssetsManifestFile>
+
+      <ComputeReferenceStaticWebAssetItems
+        Assets="@(_CachedPublishStaticWebAssets)"
+        ProjectMode="$(StaticWebAssetProjectMode)"
+        AssetKind="Publish"
+        Source="$(PackageId)"
+        MakeReferencedAssetOriginalItemSpecAbsolute="$(StaticWebAssetMakeReferencedAssetOriginalItemSpecAbsolute)"
+      >
+        <Output TaskParameter="StaticWebAssets" ItemName="_CachedPublishReferencedStaticWebAsset" />
+      </ComputeReferenceStaticWebAssetItems>
+
+      <ComputeEndpointsForReferenceStaticWebAssets
+        Assets="@(_CachedPublishReferencedStaticWebAsset)"
+        CandidateEndpoints="@(_CachedPublishStaticWebAssetEndpoints)"
+      >
+        <Output TaskParameter="Endpoints" ItemName="_CachedPublishReferencedStaticWebAssetEndpoints" />
+      </ComputeEndpointsForReferenceStaticWebAssets>
+
       <ItemGroup>
         <_CachedBuildStaticWebAssetItemsDeferred Deferred="true" Include="@(_CachedBuildStaticWebAssetsResolved)">
           <ResultType>StaticWebAssetResolved</ResultType>
