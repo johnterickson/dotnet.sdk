@@ -165,6 +165,6 @@
   <PropertyGroup>
     <MicrosoftBuildVersion>18.3.0-dev-26180-01</MicrosoftBuildVersion>
     <MicrosoftBuildLocalizationVersion>18.3.0-dev-26180-01</MicrosoftBuildLocalizationVersion>
-    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">18.0.0</MicrosoftBuildMinimumVersion>
+    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">18.3.0-dev-26180-01</MicrosoftBuildMinimumVersion>
   </PropertyGroup>
 </Project>
