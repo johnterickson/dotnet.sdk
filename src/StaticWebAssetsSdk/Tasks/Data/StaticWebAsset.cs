@@ -531,6 +531,13 @@ public sealed class StaticWebAsset : IEquatable<StaticWebAsset>, IComparable<Sta
         (Fingerprint, Integrity) = ComputeFingerprintAndIntegrity();
     }
 
+    public void ResolveFingerprintAndIntegrity(string fingerprint, string integrity)
+    {
+        DeferredFingerprint = string.Empty;
+        Fingerprint = fingerprint;
+        Integrity = integrity;
+    }
+
     internal (string fingerprint, string integrity) ComputeFingerprintAndIntegrity()
     {
         var file = ResolveFile(Identity, OriginalItemSpec);

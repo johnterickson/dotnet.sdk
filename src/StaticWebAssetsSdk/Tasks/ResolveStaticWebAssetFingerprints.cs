@@ -1,6 +1,8 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Linq;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
@@ -19,7 +21,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
             try
             {
                 Assets = Assets
-                    .Select(StaticWebAsset.FromTaskItem)
+                    .Select(a => StaticWebAsset.FromTaskItem(a))
                     .Select(t => { t.ResolveFingerprintAndIntegrity(); return t; })
                     .Select(t => t.ToTaskItem())
                     .ToArray();
@@ -48,10 +50,10 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         {
             try
             {
-                var lookup = ResolvedAssets.Select(StaticWebAsset.FromTaskItem).ToDictionary(t => t.Identity, t => t, OSPath.PathComparer);
+                var lookup = ResolvedAssets.Select(a => StaticWebAsset.FromTaskItem(a)).ToDictionary(t => t.Identity, t => t, StringComparer.OrdinalIgnoreCase);
 
                 Assets = Assets
-                    .Select(StaticWebAsset.FromTaskItem)
+                    .Select(a => StaticWebAsset.FromTaskItem(a))
                     .Select(t =>
                     {
                         var value = lookup[t.Identity];
