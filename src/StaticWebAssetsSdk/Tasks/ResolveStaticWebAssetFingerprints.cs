@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Linq;
 using Microsoft.Build.Framework;
 
@@ -12,7 +11,7 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
         [Required]
         [Output]
         [PrecomputeInput]
-        public ITaskItem[] Assets { get; set; }
+        public ITaskItem[] Assets { get; set; } = [];
 
         public bool ExecuteStatic() => true;
 
@@ -39,10 +38,10 @@ namespace Microsoft.AspNetCore.StaticWebAssets.Tasks
     {
         [Required]
         [Output]
-        public ITaskItem[] Assets { get; set; }
+        public ITaskItem[] Assets { get; set; } = [];
         
         [Required]
-        public ITaskItem[] ResolvedAssets { get; set; }
+        public ITaskItem[] ResolvedAssets { get; set; } = [];
 
         public bool ExecuteStatic() => true;
 

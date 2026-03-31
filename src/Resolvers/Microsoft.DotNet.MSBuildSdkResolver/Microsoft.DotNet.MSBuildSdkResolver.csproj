@@ -99,7 +99,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="VerifyDependencies" AfterTargets="Build" Condition="'$(ExcludeFromDotNetBuild)' != 'true'">
+  <Target Name="VerifyDependencies" AfterTargets="Build" Condition="'$(ExcludeFromDotNetBuild)' != 'true' and '$(TESTMSBUILD_RELEASE)' == ''">
     <ResolveAssemblyReference AssemblyFiles="$(TargetPath)" SearchPaths="" AutoUnify="true">
       <Output TaskParameter="ResolvedDependencyFiles" ItemName="ResolvedDependencies" />
     </ResolveAssemblyReference>
