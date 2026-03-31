@@ -8,7 +8,7 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.AspNetCore.StaticWebAssets.Tasks;
 
-public class GenerateStaticWebAssetEndpointsManifest : Task, ITaskHybrid
+public class GenerateStaticWebAssetEndpointsManifest : Task
 {
     [Required]
     public ITaskItem[] Assets { get; set; } = [];
@@ -22,11 +22,13 @@ public class GenerateStaticWebAssetEndpointsManifest : Task, ITaskHybrid
     [Required] public string Source { get; set; }
 
     [Required]
-    [Output]
-    [PrecomputeOutput]
-    public ITaskItem ManifestPath { get; set; }
+    public string ManifestPath { get; set; }
 
-    public bool ExecuteStatic() => true;
+    public string CacheFilePath { get; set; }
+
+    public string ExclusionPatterns { get; set; }
+
+    public string ExclusionPatternsCacheFilePath { get; set; }
 
     public override bool Execute()
     {
@@ -126,7 +128,7 @@ public class GenerateStaticWebAssetEndpointsManifest : Task, ITaskHybrid
                 Endpoints = [.. filteredEndpoints]
             };
 
-            this.PersistFileIfChanged(manifest, ManifestPath.ItemSpec);
+            this.PersistFileIfChanged(manifest, ManifestPath, StaticWebAssetsJsonSerializerContext.RelaxedEscaping.StaticWebAssetEndpointsManifest);
         }
         catch (Exception ex)
         {
