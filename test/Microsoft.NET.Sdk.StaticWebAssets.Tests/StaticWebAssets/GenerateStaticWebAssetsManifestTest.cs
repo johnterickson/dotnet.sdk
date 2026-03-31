@@ -5,7 +5,6 @@
 
 using Microsoft.AspNetCore.StaticWebAssets.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Moq;
 
 namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
@@ -42,7 +41,7 @@ namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = new TaskItem(TempFilePath),
+                ManifestPath = TempFilePath,
             };
 
             // Act
@@ -90,7 +89,7 @@ namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = new TaskItem(TempFilePath),
+                ManifestPath = TempFilePath,
             };
 
             // Act
@@ -199,7 +198,7 @@ namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = new TaskItem(TempFilePath),
+                ManifestPath = TempFilePath,
             };
 
             // Act
@@ -276,7 +275,7 @@ namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = new TaskItem(TempFilePath),
+                ManifestPath = TempFilePath,
             };
 
             // Act
@@ -309,7 +308,7 @@ namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = new TaskItem(TempFilePath),
+                ManifestPath = TempFilePath,
             };
 
             // Act
@@ -347,7 +346,7 @@ namespace Microsoft.NET.Sdk.StaticWebAssets.Tests
                 Source = "MyProject",
                 ManifestType = "Build",
                 Mode = "Default",
-                ManifestPath = new TaskItem(TempFilePath),
+                ManifestPath = TempFilePath,
             };
 
             // Act

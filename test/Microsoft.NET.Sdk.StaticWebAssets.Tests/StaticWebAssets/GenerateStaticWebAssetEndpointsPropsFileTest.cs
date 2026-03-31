@@ -79,7 +79,7 @@ public class GenerateStaticWebAssetEndpointsPropsFileTest
                     ])
             ],
             PackagePathPrefix = "staticwebassets",
-            TargetPropsFilePath = new TaskItem(file)
+            TargetPropsFilePath = file
         };
 
         // Act
@@ -149,7 +149,7 @@ public class GenerateStaticWebAssetEndpointsPropsFileTest
                     ])
             ],
             PackagePathPrefix = "staticwebassets",
-            TargetPropsFilePath = new TaskItem(Path.GetTempFileName()),
+            TargetPropsFilePath = Path.GetTempFileName(),
         };
 
         // Act
