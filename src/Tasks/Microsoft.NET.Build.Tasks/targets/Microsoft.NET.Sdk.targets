@@ -1434,6 +1434,12 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Import Project="$(ILLinkTargetsPath)" Condition="'$(ILLinkTargetsPath)' != '' and '$(Language)' != 'C++'" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Analyzers.targets" Condition="'$(Language)' == 'C#' or '$(Language)' == 'VB'" />
 
+  <!-- Precompute: Override Roslyn UsingTask registrations AFTER the language-specific targets import them.
+       This ensures PrecomputationMode is set on the final winning UsingTask registration (last-wins). -->
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(_PrecomputeCodeAnalysisAssembly)" Condition="'$(_PrecomputeCodeAnalysisAssembly)' != ''" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(_PrecomputeCodeAnalysisAssembly)" Condition="'$(_PrecomputeCodeAnalysisAssembly)' != ''" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(_PrecomputeCodeAnalysisAssembly)" Condition="'$(_PrecomputeCodeAnalysisAssembly)' != ''" PrecomputationMode="Dynamic" />
+
   <!--
     ============================================================
                                         Run Information
