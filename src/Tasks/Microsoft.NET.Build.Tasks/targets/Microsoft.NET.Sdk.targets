@@ -228,9 +228,14 @@ Copyright (c) .NET Foundation. All rights reserved.
   <!-- NOTE: Keep in sync with https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.tasks -->
   <!-- `Condition="Exists(...)` is needed because the package might not be yet downloaded during restore in VS
         and we do not want to fail the restore phase because of that. -->
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
-  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll" Condition="Exists('$(RoslynTargetsPath)')" PrecomputationMode="Dynamic" />
+  <!-- Determine the correct CodeAnalysis assembly name (handles binfx\*.Sdk.dll rename in 10.x) -->
+  <PropertyGroup>
+    <_PrecomputeCodeAnalysisAssembly Condition="Exists('$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll')">$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.dll</_PrecomputeCodeAnalysisAssembly>
+    <_PrecomputeCodeAnalysisAssembly Condition="'$(_PrecomputeCodeAnalysisAssembly)' == '' and Exists('$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.Sdk.dll')">$(RoslynTargetsPath)\Microsoft.Build.Tasks.CodeAnalysis.Sdk.dll</_PrecomputeCodeAnalysisAssembly>
+  </PropertyGroup>
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.CopyRefAssembly" AssemblyFile="$(_PrecomputeCodeAnalysisAssembly)" Condition="'$(_PrecomputeCodeAnalysisAssembly)' != ''" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(_PrecomputeCodeAnalysisAssembly)" Condition="'$(_PrecomputeCodeAnalysisAssembly)' != ''" PrecomputationMode="Dynamic" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Vbc" AssemblyFile="$(_PrecomputeCodeAnalysisAssembly)" Condition="'$(_PrecomputeCodeAnalysisAssembly)' != ''" PrecomputationMode="Dynamic" />
 
   <ItemGroup Condition="'$(_NeedToDownloadMicrosoftNetSdkCompilersToolsetPackage)' == 'true'">
     <PackageDownload Include="Microsoft.Net.Sdk.Compilers.Toolset" Version="[$(NETCoreSdkVersion)]" />
