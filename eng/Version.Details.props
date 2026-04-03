@@ -35,7 +35,7 @@ This file should be imported by eng/Versions.props
     <MicrosoftBclAsyncInterfacesPackageVersion>10.0.6</MicrosoftBclAsyncInterfacesPackageVersion>
     <MicrosoftBuildPackageVersion>18.0.11</MicrosoftBuildPackageVersion>
     <MicrosoftBuildLocalizationPackageVersion>18.0.11-servicing-26174-113</MicrosoftBuildLocalizationPackageVersion>
-    <MicrosoftBuildNuGetSdkResolverPackageVersion>7.0.2-rc.17513</MicrosoftBuildNuGetSdkResolverPackageVersion>
+    <MicrosoftBuildNuGetSdkResolverPackageVersion>[7.4.0-zlocal.65534]</MicrosoftBuildNuGetSdkResolverPackageVersion>
     <MicrosoftBuildTasksGitPackageVersion>10.0.106</MicrosoftBuildTasksGitPackageVersion>
     <MicrosoftCodeAnalysisPackageVersion>5.0.0-2.26174.113</MicrosoftCodeAnalysisPackageVersion>
     <MicrosoftCodeAnalysisBuildClientPackageVersion>5.0.0-2.26174.113</MicrosoftCodeAnalysisBuildClientPackageVersion>
@@ -103,22 +103,22 @@ This file should be imported by eng/Versions.props
     <MicrosoftWin32SystemEventsPackageVersion>10.0.6</MicrosoftWin32SystemEventsPackageVersion>
     <MicrosoftWindowsDesktopAppInternalPackageVersion>10.0.6-servicing.26174.113</MicrosoftWindowsDesktopAppInternalPackageVersion>
     <MicrosoftWindowsDesktopAppRefPackageVersion>10.0.6</MicrosoftWindowsDesktopAppRefPackageVersion>
-    <NuGetBuildTasksPackageVersion>7.0.2-rc.17513</NuGetBuildTasksPackageVersion>
-    <NuGetBuildTasksConsolePackageVersion>7.0.2-rc.17513</NuGetBuildTasksConsolePackageVersion>
-    <NuGetBuildTasksPackPackageVersion>7.0.2-rc.17513</NuGetBuildTasksPackPackageVersion>
-    <NuGetCommandLineXPlatPackageVersion>7.0.2-rc.17513</NuGetCommandLineXPlatPackageVersion>
-    <NuGetCommandsPackageVersion>7.0.2-rc.17513</NuGetCommandsPackageVersion>
-    <NuGetCommonPackageVersion>7.0.2-rc.17513</NuGetCommonPackageVersion>
-    <NuGetConfigurationPackageVersion>7.0.2-rc.17513</NuGetConfigurationPackageVersion>
-    <NuGetCredentialsPackageVersion>7.0.2-rc.17513</NuGetCredentialsPackageVersion>
-    <NuGetDependencyResolverCorePackageVersion>7.0.2-rc.17513</NuGetDependencyResolverCorePackageVersion>
-    <NuGetFrameworksPackageVersion>7.0.2-rc.17513</NuGetFrameworksPackageVersion>
-    <NuGetLibraryModelPackageVersion>7.0.2-rc.17513</NuGetLibraryModelPackageVersion>
-    <NuGetLocalizationPackageVersion>7.0.2-rc.17513</NuGetLocalizationPackageVersion>
-    <NuGetPackagingPackageVersion>7.0.2-rc.17513</NuGetPackagingPackageVersion>
-    <NuGetProjectModelPackageVersion>7.0.2-rc.17513</NuGetProjectModelPackageVersion>
-    <NuGetProtocolPackageVersion>7.0.2-rc.17513</NuGetProtocolPackageVersion>
-    <NuGetVersioningPackageVersion>7.0.2-rc.17513</NuGetVersioningPackageVersion>
+    <NuGetBuildTasksPackageVersion>[7.4.0-zlocal.65534]</NuGetBuildTasksPackageVersion>
+    <NuGetBuildTasksConsolePackageVersion>[7.4.0-zlocal.65534]</NuGetBuildTasksConsolePackageVersion>
+    <NuGetBuildTasksPackPackageVersion>[7.4.0-zlocal.65534]</NuGetBuildTasksPackPackageVersion>
+    <NuGetCommandLineXPlatPackageVersion>[7.4.0-zlocal.65534]</NuGetCommandLineXPlatPackageVersion>
+    <NuGetCommandsPackageVersion>[7.4.0-zlocal.65534]</NuGetCommandsPackageVersion>
+    <NuGetCommonPackageVersion>[7.4.0-zlocal.65534]</NuGetCommonPackageVersion>
+    <NuGetConfigurationPackageVersion>[7.4.0-zlocal.65534]</NuGetConfigurationPackageVersion>
+    <NuGetCredentialsPackageVersion>[7.4.0-zlocal.65534]</NuGetCredentialsPackageVersion>
+    <NuGetDependencyResolverCorePackageVersion>[7.4.0-zlocal.65534]</NuGetDependencyResolverCorePackageVersion>
+    <NuGetFrameworksPackageVersion>[7.4.0-zlocal.65534]</NuGetFrameworksPackageVersion>
+    <NuGetLibraryModelPackageVersion>[7.4.0-zlocal.65534]</NuGetLibraryModelPackageVersion>
+    <NuGetLocalizationPackageVersion>[7.4.0-zlocal.65534]</NuGetLocalizationPackageVersion>
+    <NuGetPackagingPackageVersion>[7.4.0-zlocal.65534]</NuGetPackagingPackageVersion>
+    <NuGetProjectModelPackageVersion>[7.4.0-zlocal.65534]</NuGetProjectModelPackageVersion>
+    <NuGetProtocolPackageVersion>[7.4.0-zlocal.65534]</NuGetProtocolPackageVersion>
+    <NuGetVersioningPackageVersion>[7.4.0-zlocal.65534]</NuGetVersioningPackageVersion>
     <SystemCodeDomPackageVersion>10.0.6</SystemCodeDomPackageVersion>
     <SystemCommandLinePackageVersion>2.0.6</SystemCommandLinePackageVersion>
     <SystemComponentModelCompositionPackageVersion>10.0.6</SystemComponentModelCompositionPackageVersion>
