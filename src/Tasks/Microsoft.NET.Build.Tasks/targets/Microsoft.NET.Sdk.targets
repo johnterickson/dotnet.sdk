@@ -1196,6 +1196,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
 
     <Csc Resources="@(_SatelliteAssemblyResourceInputs)"
+         PrecomputationMode="Dynamic"
          Sources="$(_AssemblyInfoFile)"
          OutputAssembly="$(_OutputAssembly)"
          References="@(_SatelliteAssemblyReferences)"
