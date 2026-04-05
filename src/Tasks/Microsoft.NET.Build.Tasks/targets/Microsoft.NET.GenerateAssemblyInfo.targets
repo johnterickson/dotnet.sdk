@@ -72,61 +72,60 @@ Copyright (c) .NET Foundation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <Target Name="GetAssemblyAttributes"
-          DependsOnTargets="GetAssemblyVersion;InitializeSourceControlInformation;AddSourceRevisionToInformationalVersion">
+  <Target Name="GetStaticAssemblyAttributes">
     <ItemGroup>
-      <AssemblyAttribute Include="System.Reflection.AssemblyCompanyAttribute" Condition="'$(Company)' != '' and '$(GenerateAssemblyCompanyAttribute)' == 'true'">
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyCompanyAttribute" Condition="'$(Company)' != '' and '$(GenerateAssemblyCompanyAttribute)' == 'true'">
         <_Parameter1>$(Company)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyConfigurationAttribute" Condition="'$(Configuration)' != '' and '$(GenerateAssemblyConfigurationAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyConfigurationAttribute" Condition="'$(Configuration)' != '' and '$(GenerateAssemblyConfigurationAttribute)' == 'true'">
         <_Parameter1>$(Configuration)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyCopyrightAttribute" Condition="'$(Copyright)' != '' and '$(GenerateAssemblyCopyrightAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyCopyrightAttribute" Condition="'$(Copyright)' != '' and '$(GenerateAssemblyCopyrightAttribute)' == 'true'">
         <_Parameter1>$(Copyright)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyDescriptionAttribute" Condition="'$(Description)' != '' and '$(GenerateAssemblyDescriptionAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyDescriptionAttribute" Condition="'$(Description)' != '' and '$(GenerateAssemblyDescriptionAttribute)' == 'true'">
         <_Parameter1>$(Description)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyFileVersionAttribute" Condition="'$(FileVersion)' != '' and '$(GenerateAssemblyFileVersionAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyFileVersionAttribute" Condition="'$(FileVersion)' != '' and '$(GenerateAssemblyFileVersionAttribute)' == 'true'">
         <_Parameter1>$(FileVersion)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyInformationalVersionAttribute" Condition="'$(InformationalVersion)' != '' and '$(GenerateAssemblyInformationalVersionAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyInformationalVersionAttribute" Condition="'$(InformationalVersion)' != '' and '$(GenerateAssemblyInformationalVersionAttribute)' == 'true'">
         <_Parameter1>$(InformationalVersion)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyProductAttribute" Condition="'$(Product)' != '' and '$(GenerateAssemblyProductAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyProductAttribute" Condition="'$(Product)' != '' and '$(GenerateAssemblyProductAttribute)' == 'true'">
         <_Parameter1>$(Product)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyTrademarkAttribute" Condition="'$(Trademark)' != '' and '$(GenerateAssemblyTrademarkAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyTrademarkAttribute" Condition="'$(Trademark)' != '' and '$(GenerateAssemblyTrademarkAttribute)' == 'true'">
         <_Parameter1>$(Trademark)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyTitleAttribute" Condition="'$(AssemblyTitle)' != '' and '$(GenerateAssemblyTitleAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyTitleAttribute" Condition="'$(AssemblyTitle)' != '' and '$(GenerateAssemblyTitleAttribute)' == 'true'">
         <_Parameter1>$(AssemblyTitle)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute" Condition="'$(AssemblyVersion)' != '' and '$(GenerateAssemblyVersionAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyVersionAttribute" Condition="'$(AssemblyVersion)' != '' and '$(GenerateAssemblyVersionAttribute)' == 'true'">
         <_Parameter1>$(AssemblyVersion)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(GenerateRepositoryUrlAttribute)' == 'true' and ('$(RepositoryUrl)' != '' or '$(PublishRepositoryUrl)' == 'true')" >
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(GenerateRepositoryUrlAttribute)' == 'true' and ('$(RepositoryUrl)' != '' or '$(PublishRepositoryUrl)' == 'true')" >
         <_Parameter1>RepositoryUrl</_Parameter1>
         <_Parameter2 Condition="'$(RepositoryUrl)' != ''">$(RepositoryUrl)</_Parameter2>
         <_Parameter2 Condition="'$(RepositoryUrl)' == ''">$(PrivateRepositoryUrl)</_Parameter2>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Resources.NeutralResourcesLanguageAttribute" Condition="'$(NeutralLanguage)' != '' and '$(GenerateNeutralResourcesLanguageAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Resources.NeutralResourcesLanguageAttribute" Condition="'$(NeutralLanguage)' != '' and '$(GenerateNeutralResourcesLanguageAttribute)' == 'true'">
         <_Parameter1>$(NeutralLanguage)</_Parameter1>
-      </AssemblyAttribute>
+      </AssemblyAttributeStatic>
       <InternalsVisibleTo Condition="'%(InternalsVisibleTo.PublicKey)' != ''">
         <Key>%(InternalsVisibleTo.PublicKey)</Key>
       </InternalsVisibleTo>
-      <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo" Condition="%(InternalsVisibleTo.Identity) != '' and '$(GenerateInternalsVisibleToAttributes)' == 'true'">
+      <AssemblyAttributeStatic Include="System.Runtime.CompilerServices.InternalsVisibleTo" Condition="%(InternalsVisibleTo.Identity) != '' and '$(GenerateInternalsVisibleToAttributes)' == 'true'">
         <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' != ''">%(InternalsVisibleTo.Identity), PublicKey=%(InternalsVisibleTo.Key)</_Parameter1>
         <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' == '' and '$(PublicKey)' != ''">%(InternalsVisibleTo.Identity), PublicKey=$(PublicKey)</_Parameter1>
         <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' == '' and '$(PublicKey)' == ''">%(InternalsVisibleTo.Identity)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadata" Condition="%(AssemblyMetadata.Identity) != '' and '$(GenerateAssemblyMetadataAttributes)' == 'true'">
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Reflection.AssemblyMetadata" Condition="%(AssemblyMetadata.Identity) != '' and '$(GenerateAssemblyMetadataAttributes)' == 'true'">
         <_Parameter1>%(AssemblyMetadata.Identity)</_Parameter1>
         <_Parameter2>%(AssemblyMetadata.Value)</_Parameter2>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Runtime.Versioning.RequiresPreviewFeaturesAttribute" Condition="'$(EnablePreviewFeatures)' == 'true' and '$(GenerateRequiresPreviewFeaturesAttribute)' == 'true'">
-      </AssemblyAttribute>
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Runtime.Versioning.RequiresPreviewFeaturesAttribute" Condition="'$(EnablePreviewFeatures)' == 'true' and '$(GenerateRequiresPreviewFeaturesAttribute)' == 'true'">
+      </AssemblyAttributeStatic>
     </ItemGroup>
 
     <ItemGroup Condition="'$(GenerateTargetPlatformAttribute)' == 'true'
@@ -134,9 +133,9 @@ Copyright (c) .NET Foundation. All rights reserved.
                          and '$(TargetPlatformVersion)' != ''
                          and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'
                          and $([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '5.0'))">
-      <AssemblyAttribute Include="System.Runtime.Versioning.TargetPlatformAttribute">
+      <AssemblyAttributeStatic Include="System.Runtime.Versioning.TargetPlatformAttribute">
         <_Parameter1>$(TargetPlatformIdentifier)$(TargetPlatformVersion)</_Parameter1>
-      </AssemblyAttribute>
+      </AssemblyAttributeStatic>
     </ItemGroup>
 
     <ItemGroup Condition="'$(GenerateSupportedOSPlatformAttribute)' == 'true'
@@ -144,22 +143,31 @@ Copyright (c) .NET Foundation. All rights reserved.
                          and '$(SupportedOSPlatformVersion)' != ''
                          and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'
                          and $([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '5.0'))">
-      <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"
+      <AssemblyAttributeStatic Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"
                          Condition="!$([MSBuild]::VersionEquals($(SupportedOSPlatformVersion), '0.0'))" >
         <_Parameter1>$(TargetPlatformIdentifier)$(SupportedOSPlatformVersion)</_Parameter1>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"
+      </AssemblyAttributeStatic>
+      <AssemblyAttributeStatic Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"
                          Condition="$([MSBuild]::VersionEquals($(SupportedOSPlatformVersion), '0.0'))" >
         <_Parameter1>$(TargetPlatformIdentifier)</_Parameter1>
-      </AssemblyAttribute>
+      </AssemblyAttributeStatic>
     </ItemGroup>
 
     <ItemGroup Condition="'$(GenerateDisableRuntimeMarshallingAttribute)' == 'true'
                          and '$(DisableRuntimeMarshalling)' == 'true'
                          and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'
                          and $([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '7.0'))">
-      <AssemblyAttribute Include="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute">
-      </AssemblyAttribute>
+      <AssemblyAttributeStatic Include="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute">
+      </AssemblyAttributeStatic>
+    </ItemGroup>
+  </Target>
+
+
+  <Target Name="GetAssemblyAttributes"
+          DependsOnTargets="GetAssemblyVersion;InitializeSourceControlInformation;AddSourceRevisionToInformationalVersion;GetStaticAssemblyAttributes"
+          Deferred="Item:AssemblyAttribute:w;Item:AssemblyAttributeStatic:r">
+    <ItemGroup>
+      <AssemblyAttribute Deferred="true" Include="@(AssemblyAttributeStatic)" />
     </ItemGroup>
   </Target>
 
