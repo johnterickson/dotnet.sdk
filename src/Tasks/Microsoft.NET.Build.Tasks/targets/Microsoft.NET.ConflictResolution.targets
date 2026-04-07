@@ -35,10 +35,15 @@ Copyright (c) .NET Foundation. All rights reserved.
                  @(ResourceCopyLocalItems);
                  @(RuntimeTargetsCopyLocalItems)"
         Exclude="@(ReferenceCopyLocalPaths)" />
+
+      <!-- Exclude project-reference-sourced analyzers from conflict resolution.
+           They are built from source and don't have NuGet version conflicts.
+           Including them causes unnecessary file probes during precompute. -->
+      <_AnalyzersForConflictResolution Include="@(Analyzer)" Condition="'%(Analyzer.ReferenceSourceTarget)' != 'ProjectReference'" />
     </ItemGroup>
 
     <ResolvePackageFileConflicts References="@(Reference)"
-                                 Analyzers="@(Analyzer)"
+                                 Analyzers="@(_AnalyzersForConflictResolution)"
                                  ReferenceCopyLocalPaths="@(ReferenceCopyLocalPaths)"
                                  OtherRuntimeItems="@(_RuntimeAssetsForConflictResolution)"
                                  PlatformManifests="@(PackageConflictPlatformManifests)"
@@ -58,8 +63,11 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup>
       <Reference Remove="@(Reference)" />
       <Reference Include="@(_ReferencesWithoutConflicts)" />
+      <!-- Save project-reference analyzers before clearing, since they were excluded from conflict resolution -->
+      <_ProjectReferenceAnalyzers Include="@(Analyzer)" Condition="'%(Analyzer.ReferenceSourceTarget)' == 'ProjectReference'" />
       <Analyzer Remove="@(Analyzer)" />
       <Analyzer Include="@(_AnalyzersWithoutConflicts)" />
+      <Analyzer Include="@(_ProjectReferenceAnalyzers)" />
       <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
       <ReferenceCopyLocalPaths Include="@(_ReferenceCopyLocalPathsWithoutConflicts)" />
     </ItemGroup>
