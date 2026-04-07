@@ -1166,7 +1166,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           Inputs="$(MSBuildAllProjects);@(_SatelliteAssemblyResourceInputs);$(IntermediateOutputPath)$(TargetName)$(TargetExt);$(KeyOriginatorFile)"
           PrecomputeInputs="@(CoreCompileInputs)"
           Outputs="$(IntermediateOutputPath)%(Culture)\$(TargetName).resources.dll"
-          Deferred="Item:_SatelliteAssemblyReferences:w;Item:SatelliteAssemblyAttribute:w;Item:_SatelliteAssemblyResourceInputs:r;Item:ReferencePath:r"
+          Deferred="Item:_SatelliteAssemblyReferences:w;Item:SatelliteAssemblyAttribute:w;Item:_SatelliteAssemblyResourceInputs:r;Item:ReferencePath:r;Item:CscCommandLineArgs:w"
           Condition="'@(_SatelliteAssemblyResourceInputs)' != ''  and '$(GenerateSatelliteAssembliesForCore)' == 'true' ">
 
     <MakeDir Directories="@(_SatelliteAssemblyResourceInputs->'$(IntermediateOutputPath)%(Culture)')" />
@@ -1218,8 +1218,10 @@ Copyright (c) .NET Foundation. All rights reserved.
          TargetType="Library"
          ToolExe="$(CscToolExe)"
          ToolPath="$(CscToolPath)"
-         UseSharedCompilation="$(UseSharedCompilation)">
+         UseSharedCompilation="$(UseSharedCompilation)"
+         ProvideCommandLineArgs="true">
 
+      <Output TaskParameter="CommandLineArgs" ItemName="CscCommandLineArgs" />
       <Output TaskParameter="OutputAssembly" ItemName="FileWrites"/>
     </Csc>
   </Target>
