@@ -163,8 +163,8 @@
 
   <!-- Precompute overrides: use locally-built MSBuild packages -->
   <PropertyGroup>
-    <MicrosoftBuildVersion>18.3.0-dev-26180-01</MicrosoftBuildVersion>
-    <MicrosoftBuildLocalizationVersion>18.3.0-dev-26180-01</MicrosoftBuildLocalizationVersion>
-    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">18.3.0-dev-26180-01</MicrosoftBuildMinimumVersion>
+    <MicrosoftBuildVersion>18.3.0-dev-26206-01</MicrosoftBuildVersion>
+    <MicrosoftBuildLocalizationVersion>18.3.0-dev-26206-01</MicrosoftBuildLocalizationVersion>
+    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">18.3.0-dev-26206-01</MicrosoftBuildMinimumVersion>
   </PropertyGroup>
 </Project>
