@@ -498,7 +498,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </PropertyGroup>
 
     <ItemGroup>
-      <_ReadyToRunCompilationFailures Deferred="true" DeferredCondition="'$(_ReadyToRunCompilerExitCode)' != '' And $(_ReadyToRunCompilerExitCode) != 0"
+      <_ReadyToRunCompilationFailures Deferred="true" Condition="'$(_ReadyToRunCompilerExitCode)' != '' And $(_ReadyToRunCompilerExitCode) != 0"
                                       Include="%(_ReadyToRunCompileList)" />
     </ItemGroup>
 
