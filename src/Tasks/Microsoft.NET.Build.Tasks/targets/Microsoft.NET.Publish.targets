@@ -568,95 +568,96 @@ Copyright (c) .NET Foundation. All rights reserved.
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
                             ComputeRefAssembliesToPublish"
-          Deferred="Item:_ResolvedCopyLocalPublishAssets:r;Item:_ResolvedCopyLocalPublishAssetsRemoved:w;Item:ResolvedFileToPublishRemoved:w;Property:PublishSingleFile:r">
+          Deferred="Item:_ResolvedCopyLocalPublishAssets:r;Item:_ResolvedCopyLocalPublishAssetsRemoved:w;Item:ResolvedFileToPublishRemoved:w;Property:PublishSingleFile:r;Item:ResolvedFileToPublish:w">
     <ItemGroup>
       <!-- Copy the build product (.dll or .exe). -->
-      <ResolvedFileToPublish Include="@(IntermediateAssembly)"
+      <ResolvedFileToPublishStatic Include="@(IntermediateAssembly)"
                              Condition="'$(CopyBuildOutputToPublishDirectory)' == 'true'">
         <RelativePath>@(IntermediateAssembly->'%(Filename)%(Extension)')</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy the deps file if using the build deps file. -->
-      <ResolvedFileToPublish Include="$(ProjectDepsFilePath)"
+      <ResolvedFileToPublishStatic Include="$(ProjectDepsFilePath)"
                              Condition="'$(GenerateDependencyFile)' == 'true' and '$(_UseBuildDependencyFile)' == 'true'">
         <RelativePath>$(ProjectDepsFileName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy the runtime config file. -->
-      <ResolvedFileToPublish Include="$(ProjectRuntimeConfigFilePath)"
+      <ResolvedFileToPublishStatic Include="$(ProjectRuntimeConfigFilePath)"
                              Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'  and '$(PublishAot)' != 'true'">
         <RelativePath>$(ProjectRuntimeConfigFileName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy the app.config (if any) -->
-      <ResolvedFileToPublish Include="@(AppConfigWithTargetPath)"
+      <ResolvedFileToPublishStatic Include="@(AppConfigWithTargetPath)"
                              Condition="'$(CopyBuildOutputToPublishDirectory)' == 'true'">
         <RelativePath>@(AppConfigWithTargetPath->'%(TargetPath)')</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy the debug information file (.pdb), if any -->
-      <ResolvedFileToPublish Include="@(_DebugSymbolsIntermediatePath)"
+      <ResolvedFileToPublishStatic Include="@(_DebugSymbolsIntermediatePath)"
                              Condition="'$(_DebugSymbolsProduced)'=='true' and '$(CopyOutputSymbolsToPublishDirectory)'=='true'">
         <RelativePath>@(_DebugSymbolsIntermediatePath->'%(Filename)%(Extension)')</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <ExcludeFromSingleFile Condition="'$(IncludeSymbolsInSingleFile)'!='true'">true</ExcludeFromSingleFile>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy satellite assemblies. -->
-      <ResolvedFileToPublish Include="@(IntermediateSatelliteAssembliesWithTargetPath)">
+      <ResolvedFileToPublishStatic Include="@(IntermediateSatelliteAssembliesWithTargetPath)">
         <RelativePath>%(IntermediateSatelliteAssembliesWithTargetPath.Culture)\%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy generated COM References. -->
-      <ResolvedFileToPublish Include="@(ReferenceComWrappersToCopyLocal)">
+      <ResolvedFileToPublishStatic Include="@(ReferenceComWrappersToCopyLocal)">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy the xml documentation (if enabled) -->
-      <ResolvedFileToPublish Include="@(FinalDocFile)"
+      <ResolvedFileToPublishStatic Include="@(FinalDocFile)"
                               Condition="'$(PublishDocumentationFile)' == 'true'">
         <RelativePath>@(FinalDocFile->'%(Filename)%(Extension)')</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
       <!-- Copy all PackAsTool shims (if any) -->
-      <ResolvedFileToPublish Include="@(_EmbeddedApphostPaths->Distinct())">
+      <ResolvedFileToPublishStatic Include="@(_EmbeddedApphostPaths->Distinct())">
         <RelativePath>shims/%(_EmbeddedApphostPaths.ShimRuntimeIdentifier)/%(_EmbeddedApphostPaths.Filename)%(_EmbeddedApphostPaths.Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
+
+      <ResolvedFileToPublishDeps Include="@(ResolvedFileToPublishStatic->'%(DependencyFile)')" Condition="'%(ResolvedFileToPublishStatic.DependencyFile)' != ''" />
+      <ResolvedFileToPublishDeps Include="@(ResolvedFileToPublishStatic->'%(Identity)')" Condition="'%(ResolvedFileToPublishStatic.DependencyFile)' == ''" />
+      <!-- Copy the resolved copy local publish assets. -->
+      <ResolvedFileToPublishDeps Include="@(_ResolvedCopyLocalPublishAssetsDeps)" />
     </ItemGroup>
 
     <ItemGroup>
+      <_ResolvedFileToPublish Deferred="true" Include="@(_ResolvedFileToPublishStatic)" />
       <_ResolvedCopyLocalPublishAssetsDistinct Deferred="true" Include="@(_ResolvedCopyLocalPublishAssets->Distinct())" />
+      <_ResolvedFileToPublishDistinct Deferred="true" Include="@(_ResolvedFileToPublish->Distinct())" />
     </ItemGroup>
 
     <!-- Remove conflicting items that appear in both _ResolvedCopyLocalPublishAssets and ResolvedFileToPublish
          to ensure that we don't get duplicate files in the publish output. -->
-    <ResolveOverlappingItemGroupConflicts ItemGroup1="@(_ResolvedCopyLocalPublishAssetsDistinct)"
-                        ItemGroup2="@(ResolvedFileToPublish->Distinct())"
+    <ResolveOverlappingItemGroupConflicts 
+                        ItemGroup1="@(_ResolvedCopyLocalPublishAssetsDistinct)"
+                        ItemGroup2="@(_ResolvedFileToPublishDistinct)"
                         PreferredPackages="$(PackageConflictPreferredPackages)"
-                        PrecomputeInputs="@(ResolvedFileToPublish)">
+                        PrecomputeInputs="@(ResolvedFileToPublishDeps)">
       <Output TaskParameter="RemovedItemGroup1" ItemName="_ResolvedCopyLocalPublishAssetsRemoved" />
       <Output TaskParameter="RemovedItemGroup2" ItemName="ResolvedFileToPublishRemoved" />
     </ResolveOverlappingItemGroupConflicts>
     
-
     <ItemGroup>
       <_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssetsRemoved)"/>
-
-      <ResolvedFileToPublishDeps Include="@(ResolvedFileToPublish->'%(DependencyFile)')" Condition="'%(ResolvedFileToPublish.DependencyFile)' != ''" />
-      <ResolvedFileToPublishDeps Include="@(ResolvedFileToPublish->'%(Identity)')" Condition="'%(ResolvedFileToPublish.DependencyFile)' == ''" />
       <ResolvedFileToPublish Deferred="true" Remove="@(ResolvedFileToPublishRemoved)"/>
-
-      <!-- Copy the resolved copy local publish assets. -->
-      <ResolvedFileToPublishDeps Include="@(_ResolvedCopyLocalPublishAssetsDeps)" />
-      <ResolvedFileToPublish Include="@(_ResolvedCopyLocalPublishAssets)">
+      <ResolvedFileToPublish Deferred="true" Include="@(_ResolvedCopyLocalPublishAssets)">
         <RelativePath>%(_ResolvedCopyLocalPublishAssets.DestinationSubDirectory)%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
@@ -665,7 +666,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       <_FilesToDrop Deferred="true" Default="true" Include="@(ResolvedFileToPublish)"
                     Condition="'$(PublishSingleFile)' == 'true' and
                                '%(ResolvedFileToPublish.DropFromSingleFile)' == 'true'"/>
-      <ResolvedFileToPublish Remove="@(_FilesToDrop)"/>
+      <ResolvedFileToPublish Deferred="true" Remove="@(_FilesToDrop)"/>
     </ItemGroup>
 
   </Target>
@@ -1051,7 +1052,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_ComputeAssembliesToPostprocessOnPublish"
           DependsOnTargets="_ComputeUserRuntimeAssemblies;$(_ComputeManagedRuntimePackAssembliesIfSelfContained)"
           PrecomputationMode="Dynamic"
-          Deferred="Item:UserRuntimeAssembly:r">
+          Deferred="Item:UserRuntimeAssembly:r;Item:ResolvedFileToPublish:w">
 
     <!--
       Default set of files to post-process correspond to the items that would be designated
@@ -1095,8 +1096,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       responsible for setting this metadata to opt in to post-processing.
     -->
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(_AssemblyToPostprocessOnPublish)" />
-      <ResolvedFileToPublish Include="@(_AssemblyToPostprocessOnPublish)" PostprocessAssembly="true" />
+      <ResolvedFileToPublish Deferred="true" Remove="@(_AssemblyToPostprocessOnPublish)" />
+      <ResolvedFileToPublish Deferred="true" Include="@(_AssemblyToPostprocessOnPublish)" PostprocessAssembly="true" />
     </ItemGroup>
   </Target>
 

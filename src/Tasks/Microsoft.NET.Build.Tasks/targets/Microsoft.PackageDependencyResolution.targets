@@ -173,7 +173,8 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask TaskName="Microsoft.NET.Build.Tasks.ResolvePackageDependencies"
              AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.NET.Build.Tasks.CheckForTargetInAssetsFile"
-           AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" />
+           AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" 
+           PrecomputationMode="Static" />
   <UsingTask TaskName="Microsoft.NET.Build.Tasks.JoinItems"
            AssemblyFile="$(MicrosoftNETBuildTasksAssembly)"
            PrecomputationMode="Static" />
