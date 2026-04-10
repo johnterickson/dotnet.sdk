@@ -161,10 +161,12 @@
   </PropertyGroup>
   <Import Project="ManualVersions.props" />
 
-  <!-- Precompute overrides: use locally-built MSBuild packages -->
+  <!-- Precompute overrides: use locally-built MSBuild packages.
+       Version auto-detected from msbuild/artifacts/msbuild.version (written by _buildmsbuild.bat). -->
   <PropertyGroup>
-    <MicrosoftBuildVersion>18.3.0-dev-26206-01</MicrosoftBuildVersion>
-    <MicrosoftBuildLocalizationVersion>18.3.0-dev-26206-01</MicrosoftBuildLocalizationVersion>
-    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">18.3.0-dev-26206-01</MicrosoftBuildMinimumVersion>
+    <_MsBuildVersionFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', 'msbuild', 'artifacts', 'msbuild.version'))</_MsBuildVersionFile>
+    <MicrosoftBuildVersion Condition="Exists('$(_MsBuildVersionFile)')">$([System.IO.File]::ReadAllText('$(_MsBuildVersionFile)').Trim())</MicrosoftBuildVersion>
+    <MicrosoftBuildLocalizationVersion>$(MicrosoftBuildVersion)</MicrosoftBuildLocalizationVersion>
+    <MicrosoftBuildMinimumVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">$(MicrosoftBuildVersion)</MicrosoftBuildMinimumVersion>
   </PropertyGroup>
 </Project>
