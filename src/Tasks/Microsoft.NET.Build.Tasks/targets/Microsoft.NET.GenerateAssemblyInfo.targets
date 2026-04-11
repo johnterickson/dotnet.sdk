@@ -60,6 +60,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           Condition="'$(GenerateAssemblyInfo)' == 'true'" />
 
   <Target Name="AddSourceRevisionToInformationalVersion"
+          PrecomputationMode="Dynamic"
           DependsOnTargets="GetAssemblyVersion;InitializeSourceControlInformation"
           Condition="'$(SourceControlInformationFeatureSupported)' == 'true' and '$(IncludeSourceRevisionInInformationalVersion)' == 'true'">
     <PropertyGroup Condition="'$(SourceRevisionId)' != ''">

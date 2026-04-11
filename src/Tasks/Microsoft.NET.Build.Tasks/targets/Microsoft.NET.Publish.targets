@@ -565,6 +565,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
   <Target Name="ComputeResolvedFilesToPublishList"
           PrecomputeInputs="@(_ResolvedCopyLocalPublishAssetsDeps)"
+          PrecomputeMerge="GeneratePublishDir"
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
                             ComputeRefAssembliesToPublish"
@@ -1291,6 +1292,7 @@ Copyright (c) .NET Foundation. All rights reserved.
                             _ComputePackageReferencePublish;
                             _GeneratePublishDependencyFileInputCache"
           Condition="'$(GenerateDependencyFile)' == 'true' and '$(_UseBuildDependencyFile)' != 'true' and '$(PublishAot)' != 'true'"
+          PrecomputeMerge="GeneratePublishDir"
           Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects);$(_GeneratePublishDependencyFilePropertyInputsCache);@(ReferenceCopyLocalPathsDeps);@(ProjectReference)"
           Outputs="$(IntermediateDepsFilePath)"
           Deferred="Property:IntermediateDepsFilePath:r;Property:ProjectDepsFileName:r">

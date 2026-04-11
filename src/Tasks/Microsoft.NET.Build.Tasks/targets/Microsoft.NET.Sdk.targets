@@ -287,7 +287,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           BeforeTargets="CopyFilesToOutputDirectory"
           Condition="'$(GenerateDependencyFile)' == 'true'"
           Inputs="$(ProjectAssetsFile);$(ProjectAssetsCacheFile);$(MSBuildAllProjects)"
-          PrecomputeInputs="@(ResolvedCompileFileDefinitions);@(ReferencePathPrecomputeInputs)"
+          PrecomputeInputs="$(ProjectAssetsFile);@(ResolvedCompileFileDefinitions);@(ReferencePathPrecomputeInputs)"
           Deferred="Item:UserRuntimeAssembly:r;Item:ReferencePath:r;Item:ReferenceDependencyPaths:r"
           Outputs="$(ProjectDepsFilePath)">
 
@@ -394,6 +394,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           DependsOnTargets="_GenerateRuntimeConfigurationFilesInputCache"
           BeforeTargets="CopyFilesToOutputDirectory"
           Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true'"
+          PrecomputeInputs="$(ProjectAssetsFile)"
           Inputs="@(GenerateRuntimeConfigurationFilesInputs)"
           Outputs="$(ProjectRuntimeConfigIntermediateOutputPath);$(ProjectRuntimeConfigDevFilePath)">
 
@@ -859,6 +860,7 @@ Copyright (c) .NET Foundation. All rights reserved.
      -->
   <UsingTask TaskName="CreateAppHost" AssemblyFile="$(MicrosoftNETBuildTasksAssembly)" PrecomputationMode="Dynamic" />
   <Target Name="_CreateAppHost"
+          PrecomputeMerge="GenerateOutDir"
           Inputs="@(IntermediateAssembly);$(AppHostSourcePath)"
           Outputs="$(AppHostIntermediatePath)"
           DependsOnTargets="_GetAppHostPaths;_GetAppHostCreationConfiguration;CoreCompile"
