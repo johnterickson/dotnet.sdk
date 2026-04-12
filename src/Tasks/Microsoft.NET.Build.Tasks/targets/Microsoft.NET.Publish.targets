@@ -569,7 +569,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
                             ComputeRefAssembliesToPublish"
-          Deferred="Item:_ResolvedCopyLocalPublishAssets:r;Item:_ResolvedCopyLocalPublishAssetsRemoved:w;Item:ResolvedFileToPublishRemoved:w;Property:PublishSingleFile:r;Item:ResolvedFileToPublish:w">
+          Deferred="Item:_ResolvedCopyLocalPublishAssets:r;Item:_ResolvedCopyLocalPublishAssetsRemoved:w;Item:ResolvedFileToPublishRemoved:w;Property:PublishSingleFile:r;Item:ResolvedFileToPublish:w;Item:ResolvedFileToPublishStatic:r">
     <ItemGroup>
       <!-- Copy the build product (.dll or .exe). -->
       <ResolvedFileToPublishStatic Include="@(IntermediateAssembly)"
@@ -639,7 +639,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
 
     <ItemGroup>
-      <_ResolvedFileToPublish Deferred="true" Include="@(_ResolvedFileToPublishStatic)" />
+      <_ResolvedFileToPublish Deferred="true" Include="@(ResolvedFileToPublishStatic)" />
       <_ResolvedCopyLocalPublishAssetsDistinct Deferred="true" Include="@(_ResolvedCopyLocalPublishAssets->Distinct())" />
       <_ResolvedFileToPublishDistinct Deferred="true" Include="@(_ResolvedFileToPublish->Distinct())" />
     </ItemGroup>
