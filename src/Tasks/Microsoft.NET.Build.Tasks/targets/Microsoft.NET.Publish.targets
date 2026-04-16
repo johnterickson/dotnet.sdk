@@ -569,7 +569,13 @@ Copyright (c) .NET Foundation. All rights reserved.
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
                             ComputeRefAssembliesToPublish"
-          Deferred="Item:_ResolvedCopyLocalPublishAssets:r;Item:_ResolvedCopyLocalPublishAssetsRemoved:w;Item:ResolvedFileToPublishRemoved:w;Property:PublishSingleFile:r;Item:ResolvedFileToPublish:w;Item:ResolvedFileToPublishStatic:r">
+          Deferred="
+            Item:_ResolvedCopyLocalPublishAssets:r;
+            Item:_ResolvedCopyLocalPublishAssetsRemoved:w;
+            Item:ResolvedFileToPublishRemoved:w;
+            Property:PublishSingleFile:r;
+            Item:ResolvedFileToPublish:w;
+            Item:ResolvedFileToPublishStatic:r">
     <ItemGroup>
       <!-- Copy the build product (.dll or .exe). -->
       <ResolvedFileToPublishStatic Include="@(IntermediateAssembly)"
@@ -1053,7 +1059,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <Target Name="_ComputeAssembliesToPostprocessOnPublish"
           DependsOnTargets="_ComputeUserRuntimeAssemblies;$(_ComputeManagedRuntimePackAssembliesIfSelfContained)"
           PrecomputationMode="Dynamic"
-          Deferred="Item:UserRuntimeAssembly:r;Item:ResolvedFileToPublish:w">
+          Deferred="Item:UserRuntimeAssembly:r;Item:IntermediateAssembly:r;Item:_ManagedRuntimePackAssembly:r;Item:ResolvedFileToPublish:w">
 
     <!--
       Default set of files to post-process correspond to the items that would be designated
