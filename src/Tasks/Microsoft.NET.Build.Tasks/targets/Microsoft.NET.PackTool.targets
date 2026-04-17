@@ -318,7 +318,10 @@ NOTE: This file is imported from the following contexts, so be aware when writin
           DependsOnTargets="ResolvePackageAssets;_PackToolValidation;_GenerateShimInputCache;_ComputeExpectedEmbeddedApphostPaths"
           Condition="'$(PackAsTool)' == 'true' and $(PackAsToolShimRuntimeIdentifiers) != '' "
           Inputs="@(_GenerateShimsAssetsInput)"
-          Outputs="$(_ShimCreatedSentinelFile)">
+          Outputs="$(_ShimCreatedSentinelFile)"
+          Deferred="Item:_PackAsToolShimRuntimeIdentifiers:r;Item:_PredictedEmbeddedApphostPaths:w"
+          PrecomputeOutputs="$([MSBuild]::NormalizeDirectory($(PackagedShimOutputRootDirectory), 'shims'))#dir"
+          PrecomputeInputs="@(IntermediateAssembly)">
 
 <!-- Predict the output paths of the embedded apphosts for the given shim runtime identifiers -->
 <!--
@@ -354,10 +357,10 @@ GenerateShims
     </PropertyGroup>
 
     <ItemGroup>
-      <_PredictedEmbeddedApphostPaths 
+      <_PredictedEmbeddedApphostPaths Deferred="true"
         Condition="$([System.String]::new('%(_PackAsToolShimRuntimeIdentifiers.Identity)').StartsWith('win-'))"
         Include="@(_PackAsToolShimRuntimeIdentifiers -> '$(PackagedShimOutputDirectory)%(Identity)\$(ToolCommandName).exe')" />
-      <_PredictedEmbeddedApphostPaths 
+      <_PredictedEmbeddedApphostPaths Deferred="true"
         Condition="!$([System.String]::new('%(_PackAsToolShimRuntimeIdentifiers.Identity)').StartsWith('win-'))"
         Include="@(_PackAsToolShimRuntimeIdentifiers -> '$(PackagedShimOutputDirectory)%(Identity)\$(ToolCommandName)')" />
     </ItemGroup>
@@ -395,11 +398,11 @@ GenerateShims
     -->
     <WriteLinesToFile PrecomputationMode="Skip" Lines="This file's LastWriteTime is used in incremental build" File="$(_ShimCreatedSentinelFile)" Overwrite="True" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsPrecomputePhase)' != 'true'">
       <!-- Do this in an ItemGroup instead of as an output parameter so that it still gets added to the item set
            during incremental builds when the task is skipped -->
       <FileWrites Include="@(_PredictedEmbeddedApphostPaths)" />
-      <FileWrites Include="$(_ShimCreatedSentinelFile)" Condition="'$(IsPrecomputePhase)' != 'true'" />
+      <FileWrites Include="$(_ShimCreatedSentinelFile)"/>
     </ItemGroup>
   </Target>
 
