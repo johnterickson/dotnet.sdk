@@ -358,28 +358,25 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
   </Target>
 
-    <Target
-      Name="_Compute_CopyResolvedFilesToPublishPreserveNewest"
-      PrecomputeMerge="GeneratePublishDir"
-      Condition="'@(_ResolvedFileToPublishPreserveNewestDeps)' != '' and '$(IsPrecomputePhase)' == 'true'"
-      PrecomputeInputs="@(_ResolvedFileToPublishPreserveNewestDeps)"
-      Deferred="
-        Property:PublishDir:r;
-        Item:_ResolvedFileToPublishPreserveNewest:r;
-        Item:Computed_ReferencesCopiedInThisBuild:w"
-        >
+  <Target
+    Name="_Compute_CopyResolvedFilesToPublishPreserveNewest"
+    PrecomputeMerge="GeneratePublishDir"
+    Condition="'@(_ResolvedFileToPublishPreserveNewestDeps)' != '' and '$(IsPrecomputePhase)' == 'true'"
+    PrecomputeInputs="@(_ResolvedFileToPublishPreserveNewestDeps)"
+    Deferred="
+      Property:PublishDir:r;
+      Item:_ResolvedFileToPublishPreserveNewest:r;
+      Item:Computed_ReferencesCopiedInThisBuild:w"
+      >
 
     <ItemGroup>
       <_Compute_CopyResolvedFilesToPublishPreserveNewestOutputs Deferred="true" Include="@(_ResolvedFileToPublishPreserveNewest->'$(PublishDir)%(RelativePath)')" />
     </ItemGroup>
 
     <Copy
-        Regraph="0"
-        NoPredict="true"
-        DryRun="true"
+        PrecomputationMode="Dynamic"
         SourceFiles="@(_ResolvedFileToPublishPreserveNewest)"
-        DestinationFiles="@(_Compute_CopyResolvedFilesToPublishPreserveNewestOutputs)"
-            >
+        DestinationFiles="@(_Compute_CopyResolvedFilesToPublishPreserveNewestOutputs)">
 
       <Output TaskParameter="CopiedFiles" ItemName="Computed_ReferencesCopiedInThisBuild"/>
     </Copy>
@@ -564,7 +561,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
   <Target Name="ComputeResolvedFilesToPublishList"
-          PrecomputeInputs="@(_ResolvedCopyLocalPublishAssetsDeps)"
+          PrecomputeInputs="@(_ResolvedCopyLocalPublishAssetsDeps);@(ResolvedFileToPublishStatic)"
           PrecomputeMerge="GeneratePublishDir"
           DependsOnTargets="_ComputeResolvedCopyLocalPublishAssets;
                             _ComputeCopyToPublishDirectoryItems;
@@ -831,6 +828,7 @@ Copyright (c) .NET Foundation. All rights reserved.
           Inputs="@(IntermediateAssembly);$(AppHostSourcePath)"
           Outputs="$(AppHostForPublishIntermediatePath)"
           DependsOnTargets="_GetAppHostPaths;_GetAppHostCreationConfiguration"
+          PrecomputeMerge="GeneratePublishDir"
           Condition="'$(_UpdateAppHostForPublish)' == 'true' and
                      Exists('@(IntermediateAssembly)') and
                      Exists('$(AppHostSourcePath)')">
@@ -857,17 +855,17 @@ Copyright (c) .NET Foundation. All rights reserved.
           DependsOnTargets="GetCopyToPublishDirectoryItems">
 
     <ItemGroup>
-      <ResolvedFileToPublish Include="@(_SourceItemsToCopyToPublishDirectoryAlways)">
+      <ResolvedFileToPublishStatic Include="@(_SourceItemsToCopyToPublishDirectoryAlways)">
         <RelativePath>%(_SourceItemsToCopyToPublishDirectoryAlways.TargetPath)</RelativePath>
         <CopyToPublishDirectory>Always</CopyToPublishDirectory>
         <IsKeyOutput Condition="'%(_SourceItemsToCopyToPublishDirectoryAlways.FullPath)' == '$(AppHostIntermediatePath)'">True</IsKeyOutput>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
 
-      <ResolvedFileToPublish Include="@(_SourceItemsToCopyToPublishDirectory)">
+      <ResolvedFileToPublishStatic Include="@(_SourceItemsToCopyToPublishDirectory)">
         <RelativePath>%(_SourceItemsToCopyToPublishDirectory.TargetPath)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <IsKeyOutput Condition="'%(_SourceItemsToCopyToPublishDirectory.FullPath)' == '$(AppHostIntermediatePath)'">True</IsKeyOutput>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
     </ItemGroup>
 
   </Target>
@@ -1355,10 +1353,10 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <ItemGroup>
       <ResolvedFileToPublishDeps Include="$(IntermediateDepsFilePath)" />
-      <ResolvedFileToPublish Include="$(IntermediateDepsFilePath)">
+      <ResolvedFileToPublishStatic Include="$(IntermediateDepsFilePath)">
         <RelativePath>$(ProjectDepsFileName)</RelativePath>
         <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
+      </ResolvedFileToPublishStatic>
     </ItemGroup>
 
   </Target>
