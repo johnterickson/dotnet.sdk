@@ -27,6 +27,15 @@ namespace Microsoft.NET.Build.Tasks
         public string NetCoreTargetingPackRoot { get; set; }
 
         public string ProjectLanguage { get; set; }
+        
+        public ITaskItem[] TargetingPackAssetPathDlls { get; set; }
+
+        /// <summary>
+        /// When set, enables predict mode: skips filesystem probes for DLLs that don't exist yet.
+        /// FrameworkList.xml is read from ResolvedTargetingPack.Path (metaobj),
+        /// but output Reference paths resolve relative to this root (real bin dir).
+        /// </summary>
+        public string PredictedRefPackRoot { get; set; }
 
         [Output]
         public ITaskItem[] ReferencesToAdd { get; set; }
@@ -105,7 +114,9 @@ namespace Microsoft.NET.Build.Tasks
                         NuGetRestoreSupported,
                         DisableTransitiveFrameworkReferenceDownloads,
                         NetCoreTargetingPackRoot,
-                        ProjectLanguage);
+                        ProjectLanguage,
+                        PredictedRefPackRoot,
+                        TargetingPackAssetPathDlls);
 
         private static ResolvedAssetsCacheEntry Resolve(StronglyTypedInputs inputs, IBuildEngine4 buildEngine)
         {
@@ -128,7 +139,7 @@ namespace Microsoft.NET.Build.Tasks
                 bool foundTargetingPack = resolvedTargetingPacks.TryGetValue(frameworkReference.Name, out TargetingPack targetingPack);
                 string targetingPackRoot = targetingPack?.Path;
 
-                if (string.IsNullOrEmpty(targetingPackRoot) || !Directory.Exists(targetingPackRoot))
+                if (!inputs.Predict && (string.IsNullOrEmpty(targetingPackRoot) || !Directory.Exists(targetingPackRoot)))
                 {
                     if (inputs.GenerateErrorForMissingTargetingPacks)
                     {
@@ -174,7 +185,7 @@ namespace Microsoft.NET.Build.Tasks
 
                     if (targetingPackFormat.Equals("NETStandardLegacy", StringComparison.OrdinalIgnoreCase))
                     {
-                        AddNetStandardTargetingPackAssets(targetingPack, targetingPackRoot, referencesToAdd);
+                        AddNetStandardTargetingPackAssets(targetingPack, targetingPackRoot, referencesToAdd, inputs);
                     }
                     else
                     {
@@ -186,10 +197,13 @@ namespace Microsoft.NET.Build.Tasks
 
                         string targetingPackDataPath = Path.Combine(targetingPackRoot, "data");
 
-                        string targetingPackDllFolder = Path.Combine(targetingPackRoot, "ref", targetingPackTargetFramework);
+                        // In Predict mode, targetingPackRoot points to metaobj (for reading FrameworkList.xml),
+                        // but DLL paths should resolve to the real ref pack dir (where DLLs will exist at compute time).
+                        string dllRoot = inputs.Predict ? inputs.PredictedRefPackRoot : targetingPackRoot;
+                        string targetingPackDllFolder = Path.Combine(dllRoot, "ref", targetingPackTargetFramework);
 
                         //  Fall back to netcoreapp5.0 folder if looking for net5.0 and it's not found
-                        if (!Directory.Exists(targetingPackDllFolder) &&
+                        if (!inputs.Predict && !Directory.Exists(targetingPackDllFolder) &&
                             targetingPackTargetFramework.Equals("net5.0", StringComparison.OrdinalIgnoreCase))
                         {
                             targetingPackTargetFramework = "netcoreapp5.0";
@@ -204,22 +218,23 @@ namespace Microsoft.NET.Build.Tasks
 
                         FrameworkListDefinition definition = new(
                             frameworkListPath,
-                            targetingPackRoot,
+                            dllRoot,
                             targetingPackDllFolder,
                             targetingPack.Name,
                             targetingPack.Profile,
                             targetingPack.NuGetPackageId,
                             targetingPack.NuGetPackageVersion,
-                            inputs.ProjectLanguage);
+                            inputs.ProjectLanguage,
+                            inputs.Predict);
 
                         AddItemsFromFrameworkList(definition, buildEngine, referencesToAdd, analyzersToAdd);
 
-                        if (File.Exists(platformManifestPath))
+                        if (!inputs.Predict && File.Exists(platformManifestPath))
                         {
                             platformManifests.Add(new TaskItem(platformManifestPath));
                         }
 
-                        if (File.Exists(packageOverridesPath))
+                        if (!inputs.Predict && File.Exists(packageOverridesPath))
                         {
                             packageConflictOverrides.Add(CreatePackageOverride(targetingPack.NuGetPackageId, packageOverridesPath));
                         }
@@ -273,12 +288,12 @@ namespace Microsoft.NET.Build.Tasks
             return packageOverride;
         }
 
-        private static void AddNetStandardTargetingPackAssets(TargetingPack targetingPack, string targetingPackRoot, List<TaskItem> referencesToAdd)
+        private static void AddNetStandardTargetingPackAssets(TargetingPack targetingPack, string targetingPackRoot, List<TaskItem> referencesToAdd, StronglyTypedInputs inputs)
         {
             string targetingPackTargetFramework = targetingPack.TargetFramework;
             string targetingPackAssetPath = Path.Combine(targetingPackRoot, "build", targetingPackTargetFramework, "ref");
 
-            foreach (var dll in Directory.GetFiles(targetingPackAssetPath, "*.dll"))
+            foreach (var dll in inputs.Predict ? inputs.TargetingPackAssetPathDlls.Select(i => i.ItemSpec) : Directory.GetFiles(targetingPackAssetPath, "*.dll"))
             {
                 var reference = CreateItem(
                     dll,
@@ -317,8 +332,11 @@ namespace Microsoft.NET.Build.Tasks
 
             string profile = definition.Profile;
 
-            bool usePathElementsInFrameworkListAsFallBack =
-                TestFirstFileInFrameworkListUsingAssemblyNameConvention(definition.TargetingPackDllFolder, frameworkListDoc);
+            // In Predict mode, skip the File.Exists probe for DLLs (they don't exist yet).
+            // Assume AssemblyName convention works (standard for modern targeting packs).
+            bool usePathElementsInFrameworkListAsFallBack = definition.Predict
+                ? false
+                : TestFirstFileInFrameworkListUsingAssemblyNameConvention(definition.TargetingPackDllFolder, frameworkListDoc);
 
             List<TaskItem> referenceItemsFromThisFramework = new();
             List<TaskItem> analyzerItemsFromThisFramework = new();
@@ -475,6 +493,9 @@ namespace Microsoft.NET.Build.Tasks
             public bool DisableTransitiveFrameworkReferences { get; private set; }
             public string NetCoreTargetingPackRoot { get; private set; }
             public string ProjectLanguage { get; private set; }
+            public bool Predict => !string.IsNullOrEmpty(PredictedRefPackRoot);
+            public string PredictedRefPackRoot { get; private set; }
+            public ITaskItem[] TargetingPackAssetPathDlls { get; private set; }
 
             public StronglyTypedInputs(
                 ITaskItem[] frameworkReferences,
@@ -484,7 +505,9 @@ namespace Microsoft.NET.Build.Tasks
                 bool nuGetRestoreSupported,
                 bool disableTransitiveFrameworkReferences,
                 string netCoreTargetingPackRoot,
-                string projectLanguage)
+                string projectLanguage,
+                string predictedRefPackRoot = null,
+                ITaskItem[] targetingPackAssetPathDlls = null)
             {
                 FrameworkReferences = frameworkReferences.Select(fr => new FrameworkReference(fr.ItemSpec)).ToArray();
                 ResolvedTargetingPacks = resolvedTargetingPacks.Select(
@@ -504,6 +527,8 @@ namespace Microsoft.NET.Build.Tasks
                 DisableTransitiveFrameworkReferences = disableTransitiveFrameworkReferences;
                 NetCoreTargetingPackRoot = netCoreTargetingPackRoot;
                 ProjectLanguage = projectLanguage;
+                PredictedRefPackRoot = predictedRefPackRoot;
+                TargetingPackAssetPathDlls = targetingPackAssetPathDlls;
             }
 
             public string CacheKey()
@@ -635,6 +660,7 @@ namespace Microsoft.NET.Build.Tasks
             public readonly string TargetingPackRoot;
             public readonly string TargetingPackDllFolder;
             public readonly string ProjectLanguage;
+            public readonly bool Predict;
 
             public readonly string FrameworkReferenceName;
             public readonly string Profile;
@@ -648,12 +674,14 @@ namespace Microsoft.NET.Build.Tasks
                                            string profile,
                                            string nuGetPackageId,
                                            string nuGetPackageVersion,
-                                           string projectLanguage)
+                                           string projectLanguage,
+                                           bool predict)
             {
                 FrameworkListPath = frameworkListPath;
                 TargetingPackRoot = targetingPackRoot;
                 TargetingPackDllFolder = targetingPackDllFolder;
                 ProjectLanguage = projectLanguage;
+                Predict = predict;
 
                 FrameworkReferenceName = frameworkReferenceName;
                 Profile = profile;

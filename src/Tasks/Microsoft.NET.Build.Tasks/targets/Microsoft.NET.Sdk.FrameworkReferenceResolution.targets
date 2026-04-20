@@ -444,7 +444,8 @@ Copyright (c) .NET Foundation. All rights reserved.
                                 GenerateErrorForMissingTargetingPacks="$(GenerateErrorForMissingTargetingPacks)"
                                 NuGetRestoreSupported="$(_NuGetRestoreSupported)"
                                 DisableTransitiveFrameworkReferenceDownloads="$(DisableTransitiveFrameworkReferenceDownloads)"
-                                NetCoreTargetingPackRoot="$(NetCoreTargetingPackRoot)">
+                                NetCoreTargetingPackRoot="$(NetCoreTargetingPackRoot)"
+                                PredictedRefPackRoot="$(PredictedRefPackRoot)">
       <Output TaskParameter="ReferencesToAdd" ItemName="ReferencesToAdd" />
       <Output TaskParameter="AnalyzersToAdd" ItemName="Analyzer" />
       <Output TaskParameter="PlatformManifests" ItemName="PlatformManifestsFromTargetingPacks" />
