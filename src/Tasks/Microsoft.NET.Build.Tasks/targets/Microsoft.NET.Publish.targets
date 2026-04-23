@@ -1141,7 +1141,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     -->
   <Target Name="_ComputeFilesToBundle"
         DependsOnTargets="_HandleFileConflictsForPublish"
-        Condition="'$(PublishSingleFile)' == 'true'">
+        Condition="'$(PublishSingleFile)' == 'true'"
+        Deferred="Item:_FilesToBundle:w;Item:ResolvedFileToPublish:w">
 
     <ItemGroup>
       <_FilesToBundle Deferred="true" Include="@(ResolvedFileToPublish)"
@@ -1158,7 +1159,8 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="PrepareForBundle"
       DependsOnTargets="_ComputeFilesToBundle"
-      Condition="'$(PublishSingleFile)' == 'true'">
+      Condition="'$(PublishSingleFile)' == 'true'"
+      Deferred="Item:_FilesToBundle:r">
 
     <ItemGroup>
       <FilesToBundle Include="@(_FilesToBundle)"/>
