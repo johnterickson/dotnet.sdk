@@ -276,8 +276,12 @@ Copyright (c) .NET Foundation. All rights reserved.
     ============================================================
     -->
 
+  <PropertyGroup>
+    <GenerateBuildDependencyFilePrecomputeMerge Condition="'$(GenerateBuildDependencyFilePrecomputeMerge)' == ''">GenerateOutDir</GenerateBuildDependencyFilePrecomputeMerge>
+  </PropertyGroup>
+
   <Target Name="GenerateBuildDependencyFile"
-          PrecomputeMerge="GenerateOutDir"
+          PrecomputeMerge="$(GenerateBuildDependencyFilePrecomputeMerge)"
           DependsOnTargets="_DefaultMicrosoftNETPlatformLibrary;
                             _HandlePackageFileConflicts;
                             _ComputeReferenceAssemblies;
