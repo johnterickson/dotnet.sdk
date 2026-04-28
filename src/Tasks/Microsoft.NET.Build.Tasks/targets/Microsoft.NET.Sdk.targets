@@ -282,6 +282,7 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   <Target Name="GenerateBuildDependencyFile"
           PrecomputeMerge="$(GenerateBuildDependencyFilePrecomputeMerge)"
+          PrecomputeOutputs="$(GenerateBuildDependencyFilePrecomputeOutputs)"
           DependsOnTargets="_DefaultMicrosoftNETPlatformLibrary;
                             _HandlePackageFileConflicts;
                             _ComputeReferenceAssemblies;
@@ -318,6 +319,8 @@ Copyright (c) .NET Foundation. All rights reserved.
       <!-- Known RID platforms for current target framework comes from ProcessFrameworkReferences output -->
       <_ValidRuntimeIdentifierPlatformsForAssets Include="@(_KnownRuntimeIdentifierPlatformsForTargetFramework)" Exclude="@(_ExcludedKnownRuntimeIdentiferPlatforms)"/>
     </ItemGroup>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(ProjectDepsFilePath)'))" Condition="'$(ProjectDepsFilePath)' != ''" PrecomputationMode="Dynamic" />
 
     <GenerateDepsFile ProjectPath="$(MSBuildProjectFullPath)"
                       AssetsFilePath="$(ProjectAssetsFile)"
